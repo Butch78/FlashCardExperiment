@@ -7,15 +7,6 @@
     <!-- Requires jQuery -->
     <script src="{{ url_for('static', filename='js/jquery.min.js')}}" type="text/javascript"></script>
 
-    <!-- Requires CodeMirror -->
-    <script src="{{ url_for('static', filename='js/codemirror.js')}}" type="text/javascript"></script>
-    <script src="{{ url_for('static', filename='mode/clike/clike.js')}}" type="text/javascript"></script>
-
-    <link rel="stylesheet" media="all" href="{{ url_for('static', filename='css/codemirror.css')}}" />
-
-    <!-- Requires Mergely -->
-    <script src="{{ url_for('static', filename='js/mergely.js')}}" type="text/javascript"></script>
-    <link rel="stylesheet" media="all" href="{{ url_for('static', filename='css/mergely.css')}}" />
 
     <link rel="stylesheet" media="all" href="{{ url_for('static', filename='css/style.css')}}" />
 </head>
@@ -59,47 +50,27 @@
 
     <div id="flashcards-container">
         {% for flashcard in flashcards %}
-        <!-- Wrap each flashcard and its questions in a container -->
         <div class="flashcard-container" id="flashcard-{{ loop.index }}" style="display: none;">
-            {{ render_flashcard(flashcard) }}
-            <!-- Render your questions here -->
+            <div class="cards">
+                {{ render_flashcard(flashcard) }}
+            </div>
             <div class="questions">
-                <!-- Example question - adapt this to your actual question layout -->
-                <p>How accurate do you think the information is?</p>
-                <!-- Inputs for your survey questions -->
-                <!-- Add a button at the end of each flashcard's questions to go to the next flashcard -->
-                <button onclick="showNextFlashcard({{ loop.index }})">Submit & Next</button>
-
-                <div style="clear: both; display: none" id="final-questions">
-                    <form action="experiment_concluded" method="post" id="current_form">
-                        <!-- "diff_data" is a fieldset with a textarea inside containing JSON formatted log data. Doing this
-                                we do not need to manipulate data in a submission function due Flask post request mechanics-->
-                        <br>
-                        <fieldset id="fieldset_question_5" class="container_radio_buttons">
-                            <p>How related is the created FlashCard to the content?</p>
-                            <label><input type="radio" name="question_interruption_time"
-                                    id="question_interruption_time_a0" value="0" class="option-input radio" required>No
-                                interruption time</label><br>
-                            <label><input type="radio" name="question_interruption_time"
-                                    id="question_interruption_time_a1" value="1" class="option-input radio">1-2
-                                minutes</label><br>
-                            <label><input type="radio" name="question_interruption_time"
-                                    id="question_interruption_time_a2" value="2" class="option-input radio">up
-                                to 5
-                                minutes</label><br>
-                            <label><input type="radio" name="question_interruption_time"
-                                    id="question_interruption_time_a3" value="3" class="option-input radio">up
-                                to 10
-                                minutes</label><br>
-                            <label><input type="radio" name="question_interruption_time"
-                                    id="question_interruption_time_a4" value="4" class="option-input radio">more
-                                than 10
-                                minutes</label><br>
-                        </fieldset>
-                        <br>
-                        <button type="submit" id="submitter" class="button blue">Next ►</button>
-                    </form>
-                </div>
+                <form action="experiment" method="post" id="current_form">
+                    {% for question in flashcard.questions %}
+                    <fieldset class="container_radio_buttons">
+                        <p>{{ question.text }}</p>
+                        {% for option in question.options %}
+                        <label>
+                            <input type="radio" name="question_{{ option.id }}" value="{{ option.value }}"
+                                class="option-input radio" required>
+                            {{ option.text }}
+                        </label><br>
+                        {% endfor %}
+                    </fieldset>
+                    <br>
+                    {% endfor %}
+                    <button onclick="showNextFlashcard({{ loop.index }})" class="button blue">Submit & Next</button>
+                </form>
             </div>
         </div>
         {% endfor %}
@@ -116,12 +87,46 @@
             }
         });
 
-        function showNextFlashcard(currentIndex) {
-            // Hide the current flashcard
+        async function showNextFlashcard(currentIndex) {
+            // Get the current flashcard
             var currentCard = document.getElementById('flashcard-' + currentIndex);
-            if (currentCard) {
-                currentCard.style.display = 'none';
+
+            // Check if a radio button is selected
+            var radios = currentCard.getElementsByTagName('input');
+            var selected = false;
+            for (var i = 0; i < radios.length; i++) {
+                if (radios[i].type === 'radio' && radios[i].checked) {
+                    selected = true;
+                    break;
+                }
             }
+
+            // If no radio button is selected, show an alert and return
+            if (!selected) {
+                alert('Please select a field before moving to the next card.');
+                return;
+            }
+
+            // Get the form data
+            var formData = new FormData(currentCard.querySelector('form'));
+
+            // Send the form data
+            try {
+                const response = await fetch('/experiment', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                return;
+            }
+
+            // Hide the current flashcard
+            currentCard.style.display = 'none';
 
             // Show the next flashcard
             var nextIndex = currentIndex + 1;
