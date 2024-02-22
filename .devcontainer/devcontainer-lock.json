@@ -1,0 +1,14 @@
+{
+  "features": {
+    "ghcr.io/devcontainers-contrib/features/ruff:1": {
+      "version": "1.0.1",
+      "resolved": "ghcr.io/devcontainers-contrib/features/ruff@sha256:8fcd98b1746eef1b5b08e0f1e011f5df8362bdd1bb982ea3c0722ed578121e57",
+      "integrity": "sha256:8fcd98b1746eef1b5b08e0f1e011f5df8362bdd1bb982ea3c0722ed578121e57"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "1.4.0",
+      "resolved": "ghcr.io/devcontainers/features/python@sha256:82abaf9613532f9977de37ea4744bd9e184a10a47348a90a9de3383805b1813e",
+      "integrity": "sha256:82abaf9613532f9977de37ea4744bd9e184a10a47348a90a9de3383805b1813e"
+    }
+  }
+}

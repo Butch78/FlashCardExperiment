@@ -1,7 +1,7 @@
 import mistune
 
 
-class Parser:
+class ExperimentParser:
     # This function reads files' content written in Markdown Language and parse
     # it in html. has_code il a flag parameter that indicates the presence of
     # snippets to put in the page. Few tags have been defined in order to

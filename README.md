@@ -11,16 +11,18 @@ First, clone the repo:
 
 ```
 > git clone https://github.com/ishepard/CRExperiment.git
-> cd CRExperiment
+> cd FlashCardExperiment
 ```
 
 ### (OPTIONAL)
 
-It is suggested to make use of `virtualenv`:
+If you are using VScode dev containers this application comes pre-installed will Python & [uv](https://github.com/astral-sh/uv)
+
+It is suggested to make use of these commands:
 
 ```
-> virtualenv -p python3 venv
-> source venv/bin/activate
+> uv venv
+> source .venv/bin/activate
 ```
 
 ### INSTALL THE REQUIREMENTS
@@ -28,11 +30,11 @@ It is suggested to make use of `virtualenv`:
 Install the requirements:
 
 ```
-> pip install -r requirements.txt
+> uv pip install -r requirements.txt
 ```
 
 ## RUN
-CRExperiment uses Flask to create a webserver. Fore more information about Flask, [check the documentation](http://flask.palletsprojects.com/en/1.1.x/).
+FlashCardExperiment uses Flask to create a webserver. Fore more information about Flask, [check the documentation](http://flask.palletsprojects.com/en/1.1.x/).
 
 In your terminal, type:
 

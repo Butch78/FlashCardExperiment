@@ -8,7 +8,7 @@ import sys
 from flask import Flask, render_template, request, make_response, redirect, \
     url_for
 
-from parser import Parser
+from experiment_parser import ExperimentParser
 
 # set the project root directory as the templates folder, you can set others.
 app = Flask(__name__)
@@ -21,10 +21,11 @@ experiments_path = os.path.join("resources", "experiments")
 
 # Counters of how many experiments have started
 # For this example, the possible options are:
-# Experiment1 control
-# Experiment1 test
-# Experiment2 control
-# Experiment2 test
+# Experiment1 control // Shirin Chapter 2
+# Experiment1 test // LLM Chapter 2
+# Experiment2 control // Shirin Chapter 3
+# Experiment2 test // LLM Chapter 3
+
 experiments_started = Counter()
 experiments_started['CR1-control'] = 0
 experiments_started['CR1-test'] = 0
@@ -41,7 +42,8 @@ experiments_concluded['CR2-test'] = 0
 # Creation of log file based on id name
 html_tags = ["<li", "<ul", "<a"]
 
-p = Parser()
+p = ExperimentParser()
+
 
 
 def choose_experiment():
@@ -91,6 +93,17 @@ def choose_experiment():
 
     return cr, test
 
+
+@app.route('/pdfs/<filename>')
+def serve_pdf(filename):
+    """
+    Serve the PDFs in the folder "resources/pdfs". 
+    This is used to serve the iframe in the "experiment.html" page.
+
+
+    :param filename: the name of the file to serve
+    """
+    return app.send_static_file('pdfs/' + filename)
 
 @app.route('/')
 def index():
