@@ -44,8 +44,6 @@ html_tags = ["<li", "<ul", "<a"]
 
 p = ExperimentParser()
 
-
-
 def choose_experiment():
     """
     Assign an experiment to a new user. We choose the type of experiment that
@@ -103,7 +101,8 @@ def serve_pdf(filename):
 
     :param filename: the name of the file to serve
     """
-    return app.send_static_file('pdfs/' + filename)
+    print(filename)
+    return app.send_static_file('pdfs/chapter_1/' + filename + ".pdf")
 
 @app.route('/')
 def index():
@@ -111,8 +110,9 @@ def index():
     Start of the application. It return the file "templates/index.html" and
     create the unique identifier "userid", if not already found.
     """
+
     resp = make_response(render_template('index.html',
-                                         title="Intro"))
+                                         title="Intro",))
     user_id = request.cookies.get('experiment-userid', None)
 
     if user_id is None:
@@ -158,6 +158,14 @@ def run_experiment():
         log_received_data(user_id, data)
     log_data(str(user_id), "start", "cr-experiment")
 
+     # Assume flashcards_data is a list of dictionaries, each representing a flashcard
+    flashcards_data = [
+        {'title': 'Flashcard 1', 'front': 'Front 1', 'back': 'Back 1', 'pdf_url': 'pdfs/section_1_1'},
+        {'title': 'Flashcard 2', 'front': 'Front 2', 'back': 'Back 2', 'pdf_url': 'pdfs/section_1_2_1'},
+        # Add more flashcards as needed
+    ]
+
+
     # Choosing experiment
     cr_file, is_test = choose_experiment()
     log_data(str(user_id), "setexperimentCRtype", cr_file)
@@ -171,6 +179,7 @@ def run_experiment():
         resp = make_response(render_template("experiment.html",
                                              title='Code Review Experiment',
                                              codes=codes,
+                                             flashcards=flashcards_data,
                                              md_body=experiment_body))
         resp.set_cookie('experiment-init-questions', 'init-questions-done')
         resp.set_cookie('experiment-experimentCRtype', cr_file)
