@@ -6,8 +6,8 @@ from datetime import datetime
 import sys
 
 from flask import Flask, render_template, request, make_response, redirect, url_for
+import polars as pl
 
-from experiment_parser import ExperimentParser
 
 # set the project root directory as the templates folder, you can set others.
 app = Flask(__name__)
@@ -20,29 +20,50 @@ experiments_path = os.path.join("resources", "experiments")
 
 # Counters of how many experiments have started
 # For this example, the possible options are:
-# Experiment1 control // Shirin Chapter 2
-# Experiment1 test // LLM Chapter 2
-# Experiment2 control // Shirin Chapter 3
-# Experiment2 test // LLM Chapter 3
+
+# FlashCard Review -- Pilot1 control // Shirin Chapter 1
+# FlashCard Review -- Pilot1 test // LLM Chapter 1
+
+# FlashCard Review -- Experiment1 control // Shirin Chapter 2
+# FlashCard Review -- Experiment1 test // LLM Chapter 2
+# FlashCard Review -- Experiment2 control // Shirin Chapter 3
+# FlashCard Review -- Experiment2 test // LLM Chapter 3
 
 experiments_started = Counter()
-experiments_started["CR1-control"] = 0
-experiments_started["CR1-test"] = 0
-experiments_started["CR2-control"] = 0
-experiments_started["CR2-test"] = 0
+
+PILOT = True
+
+# Pilot Experiment
+experiments_started["FC-P1-control"] = 0
+experiments_started["FC-P1-test"] = 0
+
+# Main Experiment
+experiments_started["FC-R1-control"] = 0
+experiments_started["FC-R1-test"] = 0
+experiments_started["FC-R2-control"] = 0
+experiments_started["FC-R2-test"] = 0
 
 # Counters of how many experiments have concluded
 experiments_concluded = Counter()
-experiments_concluded["CR1-control"] = 0
-experiments_concluded["CR1-test"] = 0
-experiments_concluded["CR2-control"] = 0
-experiments_concluded["CR2-test"] = 0
+
+# Pilot Experiment
+experiments_concluded["FC-P1-control"] = 0
+experiments_concluded["FC-P1-test"] = 0
+
+# Main Experiment
+experiments_concluded["FC-R1-control"] = 0
+experiments_concluded["FC-R1-test"] = 0
+experiments_concluded["FC-R2-control"] = 0
+experiments_concluded["FC-R2-test"] = 0
 
 # Creation of log file based on id name
 html_tags = ["<li", "<ul", "<a"]
 
-p = ExperimentParser()
-
+def load_questions():
+    question_data = []
+    with open("./resources/experiment_questions.json") as f:
+        question_data = json.load(f)
+    return question_data
 
 def choose_experiment():
     """
@@ -73,19 +94,43 @@ def choose_experiment():
 
     print("Assigned to " + to_assing)
 
-    if to_assing.startswith("CR1"):
-        # assign to experiment 1
-        cr = "files_experiment1"
-    else:
-        # assign to experiment 2
-        cr = "files_experiment2"
+    # ADD Code for PILOT
+    if PILOT:
+        if to_assing.startswith("FC-P1"):
+            # assign to Pilot/Chapter 1
+            
+            if to_assing.endswith("control"):
+                # assigned to control group
+                cr = "control_flashcards_chapter_1_sections.parquet"
+                test = False
+            else: 
+                # assigned to test group
+                cr = "test_flashcards_chapter_1_sections.parquet"
+                test = True
 
-    if to_assing.split("-")[0].endswith("control"):
-        # assigned to control group
-        test = False
+
     else:
-        # assigned to test group
-        test = True
+        # Assign Chapter 2 or 3
+        if to_assing.startswith("FC-R2"):
+            # assign to experiment 1
+            if to_assing.split("-")[0].endswith("control"):
+                # assigned to control group
+                test = False
+                cr = "control_flashcards_chapter_2_sections.parquet"
+            else:
+                # assigned to test group
+                test = True
+                cr = "test_flashcards_chapter_2_sections.parquet"
+        else:
+            # assign to experiment 2
+            if to_assing.split("-")[0].endswith("control"):
+                # assigned to control group
+                test = False
+                cr = "control_flashcards_chapter_3_sections.parquet"
+            else:
+                # assigned to test group
+                test = True
+                cr = "test_flashcards_chapter_3_sections.parquet"
 
     experiments_started[to_assing] += 1
 
@@ -102,7 +147,7 @@ def serve_pdf(filename):
     :param filename: the name of the file to serve
     """
     print(filename)
-    return app.send_static_file("pdfs/chapter_1/" + filename + ".pdf")
+    return app.send_static_file("pdfs/chapter_1/" + filename)
 
 
 @app.route("/")
@@ -171,7 +216,7 @@ def run_experiment():
             "title": "Flashcard 1",
             "front": "Front 1",
             "back": "Back 1",
-            "pdf_url": "pdfs/section_1_1",
+            "pdf_filename": "section_1_1.pdf",
             "questions": [
                 {
                     "text": "Question 1 for Flashcard 1",
@@ -244,21 +289,24 @@ def run_experiment():
 
     # Choosing experiment
     cr_file, is_test = choose_experiment()
-    log_data(str(user_id), "setexperimentCRtype", cr_file)
-    log_data(str(user_id), "setexperimentCRistest", str(is_test))
+    # Question data
+    question_data = load_questions()
+
+    print(cr_file, is_test)
+    log_data(str(user_id), "setexperimentFCRtype", cr_file)
+    log_data(str(user_id), "setexperimentFCRistest", str(is_test))
 
     exp_is_done = request.cookies.get("experiment-is_done", "not_done")
     if exp_is_done != "DONE":
-        experiment_snippets, experiment_body = read_experiment(cr_file)
-        codes = build_experiments(experiment_snippets)
+        # Load from parquet file
 
         resp = make_response(
             render_template(
                 "experiment.html",
                 title="Code Review Experiment",
-                codes=codes,
-                flashcards=flashcards_data,
-                md_body=experiment_body,
+                flashcards=pl.read_parquet(f"resources/experiments/{cr_file}").to_dict(),
+                questions=question_data, 
+                
             )
         )
         resp.set_cookie("experiment-init-questions", "init-questions-done")

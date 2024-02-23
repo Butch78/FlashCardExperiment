@@ -56,7 +56,7 @@
             </div>
             <div class="questions">
                 <form action="experiment" method="post" id="current_form">
-                    {% for question in flashcard.questions %}
+                    {% for question in questions %}
                     <fieldset class="container_radio_buttons">
                         <p>{{ question.text }}</p>
                         {% for option in question.options %}
