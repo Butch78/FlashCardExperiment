@@ -110,23 +110,32 @@
             <div class="questions">
                 <form action="experiment" method="post" id="current_form">
                     <fieldset class="container_radio_buttons">
-                        <p>How comprehensive is the created Flashcard on the Right? From a scale from 1 to 5 with 1
-                            being the least
-                            comprehensive and 5 being the most comprehensive.</p>
-                        <label><input type="radio" name="comprehensive" value="1" required> 1</label>
-                        <label><input type="radio" name="comprehensive" value="2"> 2</label>
-                        <label><input type="radio" name="comprehensive" value="3"> 3</label>
-                        <label><input type="radio" name="comprehensive" value="4"> 4</label>
-                        <label><input type="radio" name="comprehensive" value="5"> 5</label>
+                        <p> How relevant is the Above created Flashcard to the Content?</p>
+                        <label><input type="radio" name="{{flashcard.file_name}}-relevance-" value="1" required> 1 (Not
+                            relevant at all)</label>
+                        <label><input type="radio" name="{{flashcard.file_name}}-relevance" value="2"> 2</label>
+                        <label><input type="radio" name="{{flashcard.file_name}}-relevance" value="3"> 3</label>
+                        <label><input type="radio" name="{{flashcard.file_name}}-relevance" value="4"> 4</label>
+                        <label><input type="radio" name="{{flashcard.file_name}}-relevance" value="5"> 5 (Extremely
+                            relevant)</label>
 
-                        <p>How well does the created Flashcard on the Right explain the concept? From a scale from 1 to
-                            5 with 1 being the least
-                            clear and 5 being the most clear.</p>
-                        <label><input type="radio" name="clarity" value="1" required> 1</label>
-                        <label><input type="radio" name="clarity" value="2"> 2</label>
-                        <label><input type="radio" name="clarity" value="3"> 3</label>
-                        <label><input type="radio" name="clarity" value="4"> 4</label>
-                        <label><input type="radio" name="clarity" value="5"> 5</label>
+                        <p>How comprehensive is the created Flashcard on the Right? </p>
+                        <label><input type="radio" name="{{flashcard.file_name}}-comprehensive" value="1" required>
+                            1 (Not at all comprehensive)</label>
+                        <label><input type="radio" name="{{flashcard.file_name}}-comprehensive" value="2"> 2</label>
+                        <label><input type="radio" name="{{flashcard.file_name}}-comprehensive" value="3"> 3</label>
+                        <label><input type="radio" name="{{flashcard.file_name}}-comprehensive" value="4"> 4</label>
+                        <label><input type="radio" name="{{flashcard.file_name}}-comprehensive" value="5"> 5 (Extremely
+                            comprehensive)</label>
+
+                        <p>How accurate is the the create FlashCard on the Right? </p>
+                        <label><input type="radio" name="{{flashcard.file_name}}-accuracy" value="1" required> 1 (Not
+                            accurate)</label>
+                        <label><input type="radio" name="{{flashcard.file_name}}-accuracy" value="2"> 2</label>
+                        <label><input type="radio" name="{{flashcard.file_name}}-accuracy" value="3"> 3</label>
+                        <label><input type="radio" name="{{flashcard.file_name}}-accuracy" value="4"> 4</label>
+                        <label><input type="radio" name="{{flashcard.file_name}}-accuracy" value="5"> 5 (Extremely
+                            accurate)</label>
                         <br>
                         <p> Loop Index: {{loop.index}} </p>
                         <button type="button" onclick="showNextFlashcard({{loop.index}})" class="button blue">Submit &
@@ -170,7 +179,7 @@
             localStorage.clear();
 
             // Redirect to a completion page or show a completion message
-            window.location.href = '/completion';
+            window.location.href = '/conclusion';
         }
 
 
@@ -189,7 +198,22 @@
             }
         });
 
+        function saveResponses(index) {
+            let flashcard = document.getElementById('flashcard-' + index);
+            if (!flashcard) return;
+
+            let inputs = flashcard.querySelectorAll('input[type="radio"]');
+            inputs.forEach(input => {
+                if (input.checked) {
+                    localStorage.setItem(input.name + '-' + index, input.value);
+                }
+            });
+        }
+
         async function showNextFlashcard(currentIndex) {
+
+            saveResponses(currentIndex);
+
             // Hide the current flashcard
             let currentCard = document.getElementById('flashcard-' + currentIndex);
             if (currentCard) {

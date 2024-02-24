@@ -203,6 +203,7 @@ def start():
 def results():
     """This function is called when the user submits the experiment results."""
     user_id = request.cookies.get("experiment-userid", "userNotFound")
+    print("Results", request.form.to_dict())
     if request.method == "POST":
         data: dict = request.form.to_dict()
         print("Data:", data)
@@ -268,7 +269,7 @@ def run_experiment():
 
         flashcards = []
         for i, flashcard in enumerate(flashcards_df.rows(named=True)):
-            if i >= 4:
+            if i >= 2:
                 break
             flashcards.append(
                 Flashcard(
@@ -431,32 +432,10 @@ def log_received_data(user_id, data):
 
 def read_files(filename):
     with open(os.path.join("resources", filename)) as f:
-        return p.parse_md(f, has_code=False)
+        return f.read()
 
 
 def log_data(user_id: str, key: str, data: str, dt: datetime = None):
     with open(f"{user_id}.log", "a") as f:
         log_dt = dt if dt is not None else datetime.timestamp(datetime.now())
         f.write(f"{log_dt};" f"{key};" f"{data}\n")
-
-
-# This function read the experiment content from experiments/ folder. Each
-# file follow the same composition rule of the experiments.
-def read_experiment(file_name):
-    """
-    This function read the experiment content from experiments/ folder. Each
-    file follow the same composition rule of the experiments.
-    """
-    with open(os.path.join(experiments_path, file_name)) as file_content:
-        snippets = p.parse_md(file_content, has_code=True)
-
-    questions_experiment = file_name.replace("files", "questions")
-    body = ""
-    if os.path.exists(os.path.join(experiments_path, questions_experiment)):
-        with open(os.path.join(experiments_path, questions_experiment)) as file_content:
-            body = p.parse_md(file_content, has_code=False)
-    return snippets, body
-
-
-def contains_html_tags(string_to_check):
-    return any(tag in string_to_check for tag in html_tags)
