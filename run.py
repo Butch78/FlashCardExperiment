@@ -7,6 +7,14 @@ import sys
 
 from flask import Flask, render_template, request, make_response, redirect, url_for
 import polars as pl
+from pydantic import BaseModel
+
+
+class Flashcard(BaseModel):
+    front: str
+    back: str
+    section_heading: str
+    file_name: str
 
 
 # set the project root directory as the templates folder, you can set others.
@@ -59,11 +67,6 @@ experiments_concluded["FC-R2-test"] = 0
 # Creation of log file based on id name
 html_tags = ["<li", "<ul", "<a"]
 
-def load_questions():
-    question_data = []
-    with open("./resources/experiment_questions.json") as f:
-        question_data = json.load(f)
-    return question_data
 
 def choose_experiment():
     """
@@ -98,16 +101,15 @@ def choose_experiment():
     if PILOT:
         if to_assing.startswith("FC-P1"):
             # assign to Pilot/Chapter 1
-            
+
             if to_assing.endswith("control"):
                 # assigned to control group
-                cr = "control_flashcards_chapter_1_sections.parquet"
+                fcr = "control_flashcards_chapter_1.parquet"
                 test = False
-            else: 
+            else:
                 # assigned to test group
-                cr = "test_flashcards_chapter_1_sections.parquet"
+                fcr = "test_flashcards_chapter_1.parquet"
                 test = True
-
 
     else:
         # Assign Chapter 2 or 3
@@ -116,25 +118,25 @@ def choose_experiment():
             if to_assing.split("-")[0].endswith("control"):
                 # assigned to control group
                 test = False
-                cr = "control_flashcards_chapter_2_sections.parquet"
+                fcr = "control_flashcards_chapter_2.parquet"
             else:
                 # assigned to test group
                 test = True
-                cr = "test_flashcards_chapter_2_sections.parquet"
+                fcr = "test_flashcards_chapter_2.parquet"
         else:
             # assign to experiment 2
             if to_assing.split("-")[0].endswith("control"):
                 # assigned to control group
                 test = False
-                cr = "control_flashcards_chapter_3_sections.parquet"
+                fcr = "control_flashcards_chapter_3_.parquet"
             else:
                 # assigned to test group
                 test = True
-                cr = "test_flashcards_chapter_3_sections.parquet"
+                fcr = "test_flashcards_chapter_3.parquet"
 
     experiments_started[to_assing] += 1
 
-    return cr, test
+    return fcr, test
 
 
 @app.route("/pdfs/<filename>")
@@ -147,6 +149,7 @@ def serve_pdf(filename):
     :param filename: the name of the file to serve
     """
     print(filename)
+    # TODO move chapter_1 to a variable depending on the experiment
     return app.send_static_file("pdfs/chapter_1/" + filename)
 
 
@@ -196,6 +199,51 @@ def start():
         return redirect(url_for("already_done"))
 
 
+@app.route("/results", methods=["POST"])
+def results():
+    """This function is called when the user submits the experiment results."""
+    user_id = request.cookies.get("experiment-userid", "userNotFound")
+    if request.method == "POST":
+        data: dict = request.form.to_dict()
+        print("Data:", data)
+        log_received_data(user_id, data)
+
+    log_data(str(user_id), "end", "initial_questions")
+
+    return redirect(url_for("run_experiment"))
+
+
+@app.route("/experiment/init", methods=["GET", "POST"])
+def init_experiment():
+    """
+    Initializes the experiment. This function calls "choose_experiment()" to decide
+    """
+
+    user_id = request.cookies.get("experiment-userid", "userNotFound")
+    fcr_file, is_test = choose_experiment()
+    print(fcr_file, is_test)
+    log_data(str(user_id), "setexperimentFCRtype", fcr_file)
+    log_data(str(user_id), "setexperimentFCRistest", str(is_test))
+
+    if request.method == "POST":
+        data: dict = request.form.to_dict()
+        print(data)
+        log_received_data(user_id, data)
+
+    resp = make_response(
+        render_template(
+            "experiment.html",
+            title="Code Review Experiment",
+        )
+    )
+    resp = make_response(redirect(url_for("run_experiment")))
+    resp.set_cookie("experiment-init-questions", "init-questions-done")
+    resp.set_cookie("experiment-experimentCRtype", fcr_file)
+    resp.set_cookie("experiment-experimentCRistest", str(is_test))
+
+    return resp
+
+
 @app.route("/experiment", methods=["GET", "POST"])
 def run_experiment():
     """
@@ -204,114 +252,42 @@ def run_experiment():
     file from "resources/experiments" and populate the page.
     """
     user_id = request.cookies.get("experiment-userid", "userNotFound")
+    fcr_file = request.cookies.get("experiment-experimentCRtype", "not_found")
     if request.method == "POST":
         data: dict = request.form.to_dict()
         print(data)
         log_received_data(user_id, data)
-    log_data(str(user_id), "start", "cr-experiment")
 
-    # Assume flashcards_data is a list of dictionaries, each representing a flashcard
-    flashcards_data = [
-        {
-            "title": "Flashcard 1",
-            "front": "Front 1",
-            "back": "Back 1",
-            "pdf_filename": "section_1_1.pdf",
-            "questions": [
-                {
-                    "text": "Question 1 for Flashcard 1",
-                    "options": [
-                        {"id": "relatedness_1", "text": "Option 1", "value": "1"},
-                        {"id": "relatedness_2", "text": "Option 2", "value": "2"},
-                        {"id": "relatedness_3", "text": "Option 3", "value": "3"},
-                        # Add more options as needed
-                    ],
-                },
-                {
-                    "text": "Question 2 for Flashcard 1",
-                    "options": [
-                        {"id": "comprehensiveness_1", "text": "Option 1", "value": "1"},
-                        {"id": "comprehensiveness_2", "text": "Option 2", "value": "2"},
-                        {"id": "comprehensiveness_3", "text": "Option 3", "value": "3"},
-                        # Add more options as needed
-                    ],
-                },
-                {
-                    "text": "Question 3 for Flashcard 1",
-                    "options": [
-                        {"id": "accuracy_1", "text": "Option 1", "value": "1"},
-                        {"id": "accuracy_2", "text": "Option 2", "value": "2"},
-                        {"id": "accuracy_3", "text": "Option 3", "value": "3"},
-                        # Add more options as needed
-                    ],
-                },
-                # Add more questions as needed
-            ],
-        },
-        {
-            "title": "Flashcard 2",
-            "front": "Front 2",
-            "back": "Back 2",
-            "pdf_url": "pdfs/section_1_2_1",
-            "questions": [
-                {
-                    "text": "Question 1 for Flashcard 2",
-                    "options": [
-                        {"id": "accuracy_1", "text": "Option 1", "value": "1"},
-                        {"id": "accuracy_2", "text": "Option 2", "value": "2"},
-                        {"id": "accuracy_3", "text": "Option 3", "value": "3"},
-                        # Add more options as needed
-                    ],
-                },
-                {
-                    "text": "Question 2 for Flashcard 2",
-                    "options": [
-                        {"id": "comprehensiveness_1", "text": "Option 1", "value": "1"},
-                        {"id": "comprehensiveness_2", "text": "Option 2", "value": "2"},
-                        {"id": "comprehensiveness_3", "text": "Option 3", "value": "3"},
-                        # Add more options as needed
-                    ],
-                },
-                {
-                    "text": "Question 2 for Flashcard 2",
-                    "options": [
-                        {"id": "relatedness_1", "text": "Option 1", "value": "1"},
-                        {"id": "relatedness_2", "text": "Option 2", "value": "2"},
-                        {"id": "relatedness_3", "text": "Option 3", "value": "3"},
-                        # Add more options as needed
-                    ],
-                },
-                # Add more questions as needed
-            ],
-        },
-        # Add more flashcards as needed
-    ]
-
-    # Choosing experiment
-    cr_file, is_test = choose_experiment()
-    # Question data
-    question_data = load_questions()
-
-    print(cr_file, is_test)
-    log_data(str(user_id), "setexperimentFCRtype", cr_file)
-    log_data(str(user_id), "setexperimentFCRistest", str(is_test))
+    log_data(str(user_id), "start", "fcr-experiment")
 
     exp_is_done = request.cookies.get("experiment-is_done", "not_done")
     if exp_is_done != "DONE":
         # Load from parquet file
 
+        flashcards_df = pl.read_parquet(f"resources/experiments/{fcr_file}")
+
+        flashcards = []
+        for i, flashcard in enumerate(flashcards_df.rows(named=True)):
+            if i >= 4:
+                break
+            flashcards.append(
+                Flashcard(
+                    front=flashcard["front"],
+                    back=flashcard["back"],
+                    section_heading=flashcard["section_heading"][:-4]
+                    if flashcard["section_heading"].endswith(".txt")
+                    else flashcard["section_heading"],
+                    file_name=flashcard["file_name"],
+                )
+            )
+
         resp = make_response(
             render_template(
                 "experiment.html",
                 title="Code Review Experiment",
-                flashcards=pl.read_parquet(f"resources/experiments/{cr_file}").to_dict(),
-                questions=question_data, 
-                
+                flashcards=flashcards,
             )
         )
-        resp.set_cookie("experiment-init-questions", "init-questions-done")
-        resp.set_cookie("experiment-experimentCRtype", cr_file)
-        resp.set_cookie("experiment-experimentCRistest", str(is_test))
         return resp
     else:
         return redirect(url_for("already_done"))
@@ -378,13 +354,13 @@ def conclusion():
 
     # update the correspondent counter
     if exp_type == "files_experiment1" and exp_is_test == "True":
-        experiments_concluded["CR1-control"] += 1
+        experiments_concluded["FC-R1-control"] += 1
     elif exp_type == "files_experiment1" and exp_is_test == "False":
-        experiments_concluded["CR1-test"] += 1
+        experiments_concluded["FC-R1-test"] += 1
     elif exp_type == "files_experiment2" and exp_is_test == "True":
-        experiments_concluded["CR2-control"] += 1
+        experiments_concluded["FC-R2-control"] += 1
     elif exp_type == "files_experiment2" and exp_is_test == "False":
-        experiments_concluded["CR2-test"] += 1
+        experiments_concluded["FC-R2-test"] += 1
 
     conclusion_text = read_files("conclusion.txt")
     return render_template(
