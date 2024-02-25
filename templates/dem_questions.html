@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <!-- Requires jQuery -->
+    <script src="{{ url_for('static', filename='js/jquery.min.js')}}" type="text/javascript"></script>
+
+    <link rel="stylesheet" media="all" href="{{ url_for('static', filename='css/style.css')}}" />
+    <script>
+        $(document).ready(function () {
+            var form = document.getElementById('current_form');
+            if (form.attachEvent) {
+                form.attachEvent("submit", processForm);
+            } else {
+                form.addEventListener("submit", processForm);
+            }
+        });
+        function processForm() {
+            //var ta0 = document.getElementById("qgendertext");
+            var ta2 = document.getElementById("q2text");
+            //if (ta0.value !== undefined){
+            //    var other = document.getElementById("qgendera2");
+            //    $(other).val(ta0.value)
+            //}
+            if (ta2.value !== undefined) {
+                other = document.getElementById("q2a9");
+                $(other).val(ta2.value)
+            }
+        }
+
+    </script>
+</head>
+
+<body>
+    <section class="content">
+        <p>Please answer the following questions before finishing the experiment:</p><br>
+        <form action="feedback" method="post" id="current_form">
+
+            <fieldset id="fieldset_question_demo2" class="container_radio_buttons">
+                <p>Please describe your gender identity in your own words (optional).</p>
+                <label><textarea id="gender" name="question_gender" style="height: 25px"></textarea></label>
+            </fieldset>
+
+            <fieldset id="fieldset_question_1" class="container_radio_buttons">
+                <p>What is your highest achieved level of education?</p>
+                <label><input type="radio" name="question_1" id="q1a0" value="0" class="option-input radio"
+                        required>High School but did not graduate</label><br>
+                <label><input type="radio" name="question_1" id="q1a1" value="1" class="option-input radio">High School
+                    graduate or GED</label><br>
+                <label><input type="radio" name="question_1" id="q1a2" value="2" class="option-input radio">Some college
+                    or 2-year degree</label><br>
+                <label><input type="radio" name="question_1" id="q1a3" value="3" class="option-input radio">Bachelor in
+                    CS (Computer Science) and/or STEM (Science, Technology, Engineering, and Mathematics)</label><br>
+                <label><input type="radio" name="question_1" id="q1a4" value="4" class="option-input radio">Bachelor in
+                    a different area than CS and/or STEM</label><br>
+                <label><input type="radio" name="question_1" id="q1a5" value="5" class="option-input radio">Master in CS
+                    and/or STEM</label><br>
+                <label><input type="radio" name="question_1" id="q1a6" value="6" class="option-input radio">Master in a
+                    different area than CS or STEM</label><br>
+                <label><input type="radio" name="question_1" id="q1a7" value="7" class="option-input radio">Ph.D. or
+                    higher academic title in CS</label><br>
+                <label><input type="radio" name="question_1" id="q1a8" value="8" class="option-input radio">Ph.D. or
+                    higher academic title in STEM</label><br>
+                <label><input type="radio" name="question_1" id="q1a9" value="9" class="option-input radio">Ph.D. or
+                    higher academic title in a different area than CS or STEM</label><br>
+            </fieldset>
+
+
+
+            <fieldset id="fieldset_question_dem6" class="container_radio_buttons">
+                <p>Please indicate your academic performance by selecting the specific grade that best corresponds to
+                    your performance:</p>
+                <label><input type="radio" name="question_dem6" id="qdem60" value="0" class="option-input radio"
+                        required>A+ (Exceptional)</label><br>
+                <label><input type="radio" name="question_dem6" id="qdem61" value="1" class="option-input radio">A
+                    (Excellent)</label><br>
+                <label><input type="radio" name="question_dem6" id="qdem62" value="2" class="option-input radio">A-
+                    (Very Good)</label><br>
+                <label><input type="radio" name="question_dem6" id="qdem63" value="3" class="option-input radio">B+
+                    (Good)</label><br>
+                <label><input type="radio" name="question_dem6" id="qdem64" value="4" class="option-input radio">B
+                    (Above Average)</label><br>
+                <label><input type="radio" name="question_dem6" id="qdem65" value="5" class="option-input radio">B-
+                    (Average)</label><br>
+                <label><input type="radio" name="question_dem6" id="qdem66" value="6" class="option-input radio">C+
+                    (Satisfactory)</label><br>
+                <label><input type="radio" name="question_dem6" id="qdem67" value="7" class="option-input radio">C
+                    (Passable)</label><br>
+                <label><input type="radio" name="question_dem6" id="qdem68" value="8" class="option-input radio">C-
+                    (Fair)</label><br>
+                <label><input type="radio" name="question_dem6" id="qdem69" value="9" class="option-input radio">D+
+                    (Poor)</label><br>
+                <label><input type="radio" name="question_dem6" id="qdem610" value="10" class="option-input radio">D
+                    (Very Poor)</label><br>
+                <label><input type="radio" name="question_dem6" id="qdem611" value="11" class="option-input radio">D-
+                    (Fail)</label><br>
+                <label><input type="radio" name="question_dem6" id="qdem612" value="12" class="option-input radio">F
+                    (Fail)</label><br>
+            </fieldset>
+            <br>
+
+            <button type="submit" id="submitter" class="button blue">Next</button>
+        </form>
+
+    </section>
+</body>
+
+</html>

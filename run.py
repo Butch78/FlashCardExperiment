@@ -152,6 +152,35 @@ def serve_pdf(filename):
     # TODO move chapter_1 to a variable depending on the experiment
     return app.send_static_file("pdfs/chapter_1/" + filename)
 
+# Loading of Personal Information Survey.
+@app.route("/dem_questions", methods=['GET', 'POST'])
+def load_questions():
+    """
+    Loading of Demographic Questions. These questions can be found and
+    changed in "templates/dem_questions.html"
+    """
+    user_id = request.cookies.get('experiment-userid', 'userNotFound')
+    if request.method == 'POST':
+        data: dict = request.form.to_dict()
+        log_received_data(user_id, data)
+    first_time = request.cookies.get('experiment-dem-questions', 'experiment-dem-not_done')
+
+    if first_time == 'experiment-dem-not_done':
+        log_data(str(user_id), "start - dem", "dem_questions")
+        resp = make_response(render_template('dem_questions.html',
+                                             title="Demographics Questions"))
+        resp.set_cookie('experiment-final', 'experiment-final-done')
+        resp.set_cookie('experiment-survey', 'experiment-survey-done')
+        return resp
+    else:
+        return redirect(url_for('already_done'))
+
+
+@app.route('/data_policy', methods=['GET', 'POST'])
+def data_policy():
+    resp = make_response(render_template("data_policy.html", title='Data Policy'))
+    resp.set_cookie('data_policy', 'open')
+    return resp
 
 @app.route("/")
 def index():
@@ -233,8 +262,8 @@ def init_experiment():
 
     resp = make_response(
         render_template(
-            "experiment.html",
-            title="Code Review Experiment",
+            "experiment_example.html",
+            title="Flash Card Review Experiment",
         )
     )
     resp = make_response(redirect(url_for("run_experiment")))

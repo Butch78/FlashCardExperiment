@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>{{title}}</title>
-   	<!-- Requires jQuery -->
-	<script src="{{ url_for('static', filename='js/jquery.min.js')}}" type="text/javascript"></script>
+    <!-- Requires jQuery -->
+    <script src="{{ url_for('static', filename='js/jquery.min.js')}}" type="text/javascript"></script>
 
     <!-- Requires CodeMirror -->
     <script src="{{ url_for('static', filename='js/codemirror.js')}}" type="text/javascript"></script>
@@ -21,35 +22,50 @@
     <!-- Script for diff production -->
     <script src="{{ url_for('static', filename='js/experiment.js')}}" type="text/javascript"></script>
     <style>
-        .lint-error {font-family: arial; font-size: 80%; background: #fcfa96; color: #a00; padding: 2px 5px 3px; border: 1px solid black;}
-        .lint-error-icon {color: white; background-color: red; font-weight: bold; border-radius: 50%; padding: 0 3px; margin-right: 7px;}
+        .lint-error {
+            font-family: arial;
+            font-size: 80%;
+            background: #fcfa96;
+            color: #a00;
+            padding: 2px 5px 3px;
+            border: 1px solid black;
+        }
+
+        .lint-error-icon {
+            color: white;
+            background-color: red;
+            font-weight: bold;
+            border-radius: 50%;
+            padding: 0 3px;
+            margin-right: 7px;
+        }
     </style>
     <script type="text/javascript">
         $(document).ready(function () {
             logData("pageLoaded", "pageLoaded")
 
-            $("#button-continue").click(function(){
+            $("#button-continue").click(function () {
                 $("#div-mergely").show();
                 $("#button-continue").hide();
                 logData("read_instructions", "read_instructions");
                 var width = $(window).width() - 50;
                 {% for code in codes %}
-                    initMergely('#compare{{code["id"]}}',
-                        parseInt('{{code["linecount"]}}') * 18.5 + 17,
-                        parseInt('{{code["contextLineCount"]}}') * 18.5,
-                        width,
-                        parseInt('{{code["left_line_number"]}}'),
-                        '{{code["left_content"] | safe}}',
-                        parseInt('{{code["right_line_number"]}}'),
-                        '{{code["right_content"] | safe}}',
-                        '{{code["prefix_line_count"]}}',
-                        '{{code["prefix_escaped"]}}',
-                        '{{code["suffix_escaped"]}}');
+                initMergely('#compare{{code["id"]}}',
+                    parseInt('{{code["linecount"]}}') * 18.5 + 17,
+                    parseInt('{{code["contextLineCount"]}}') * 18.5,
+                    width,
+                    parseInt('{{code["left_line_number"]}}'),
+                    '{{code["left_content"] | safe}}',
+                    parseInt('{{code["right_line_number"]}}'),
+                    '{{code["right_content"] | safe}}',
+                    '{{code["prefix_line_count"]}}',
+                    '{{code["prefix_escaped"]}}',
+                    '{{code["suffix_escaped"]}}');
                 {% endfor %}
             })
         });
 
-        function showquestions(){
+        function showquestions() {
             logData("end_cr_experiment", "clickshowquestions")
             $("#review-completed").hide();
             $("#final-questions").show();
@@ -57,70 +73,153 @@
     </script>
 </head>
 <style>
-    #mergely-splash { display: none !important;}
+    #mergely-splash {
+        display: none !important;
+    }
 </style>
+
 <body>
     <div>
-        <p><h1>Instructions</h1></p>
-        <p>We are now going to show you the code changes to review. The old version of the code is on the left, the new version is on the right.</p>
-        <p>For the scientific validity of this experiment, it is vital that the review task is taken <b>very seriously</b>.</p>
-        <ul>
-            <li>Like in real life, you should <b>find as many defects as possible</b> and you should <b>spend as little time as possible</b> on the review.</li>
-            <li>Unlike in real life, we are <b>not interested in maintainability or design issues</b>, but only in correctness issues ("bugs").</li>
-        </ul>
+        <div>
+            <p>
+            <h1>Instructions</h1>
+            </p>
+            <p>We are now going to show you the LLM Generated FlashCards. The source Text is Highlighted on the left,
+                the
+                Generated FlashCard is on the right</p>
+            <p>For the scientific validity of this experiment, it is vital that the review task is taken <b>very
+                    seriously</b>.
+            </p>
+            <p>For each flashcard, you will be asked to evaluate the relevance, comprehensiveness, and accuracy of the
+                generated flashcard in respect to the content on the left highlighted in yellow.</p>
 
-        <p>For example, a remark like the following is beyond the goal of the review: "Create a new class which is implemented by runnable interface that we can access multiple times."
-            Instead, what we are interested in are the defects that make the code not work as intended under all circumstances.</p>
-
-        <p>Please assume that the code compiles and that the tests pass.</p>
-        <p>
-            To add a review remark, click on the corresponding line number. To delete a review mark, click on it again and delete the remark's text.<br><br>
-        </p>
+        </div>
 
     </div>
     <div>
-        <form method="get" id="button-continue">
-            <button type="button" class="button blue" style="height: 50px;">I have read the instructions and I want to start the review ►</button><br><br>
+        <form action="/experiment/init" id="button-continue">
+            <button type="button" class="button blue" style="height: 50px;">I have read the instructions and I want to
+                start the review ►</button><br><br>
         </form>
     </div>
-    <div class="mergely-full-screen-8" style="overflow-y: scroll; display: none" id="div-mergely">
-        <div class="mergely-resizer">
-            {% for code in codes %}
-                <table width="100%">
-                    <tbody>
-                        <tr>
-                            <td width="50%">{{ code['filename'] }}</td>
-                            <td>{{ code['filename'] }}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div id="compare{{code['id']}}" class="hunk"></div><br/>
-            {% endfor %}
+
+    <style>
+        .container {
+            display: flex;
+            height: 50vh;
+            /* Adjust based on your layout */
+        }
+
+        .pdf-viewer {
+            flex: 2;
+            /* Adjust based on your preference */
+            height: 100%;
+        }
+
+        .sidebar {
+            flex: 2;
+            /* Adjust based on your preference */
+            background-color: #f0f0f0;
+            /* Example background color */
+            padding: 20px;
+            overflow-y: auto;
+            /* Allows scrolling if the content is too long */
+        }
+
+        .flashcard {
+            border: 1px solid #ccc;
+            /* Example border */
+            padding: 10px;
+            margin-top: 20px;
+        }
+
+        .front,
+        .back {
+            margin-bottom: 10px;
+        }
+    </style>
+
+
+
+    <div id="flashcards-container">
+        {% for flashcard in flashcards %}
+        <div class="flashcard-container" id="flashcard-{{ loop.index }}" style="display: none;">
+            <div class="cards">
+                <div class="container">
+                    <div class="pdf-viewer">
+                        <iframe src="/pdfs/section_1_2_1.pdf" width="100%" height="600px" loading="lazy"
+                            title="PDF-file"></iframe>
+                    </div>
+                    <div class="sidebar">
+                        <h2>{{ flashcard.section_heading }}</h2>
+                        <div class="flashcard">
+                            <div class="front">
+                                <h3>Front</h3>
+                                <p>{{ flashcard.front }}</p>
+                            </div>
+                            <div class="back">
+                                <h3>Back</h3>
+                                <p>{{ flashcard.back }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="questions">
+                <<fieldset id="fieldset_relevance" class="container_radio_buttons">
+                    <p>How relevant is the above created flashcard in respect to the content on the left
+                        Highlighted in
+                        Yellow? </p>
+                    <label><input type="radio" name="{{flashcard.file_name}}-relevance" id="relevance1" value="1"
+                            class="option-input radio" required> 1 (Not relevant at all)</label><br>
+                    <label><input type="radio" name="{{flashcard.file_name}}-relevance" id="relevance2" value="2"
+                            class="option-input radio"> 2</label><br>
+                    <label><input type="radio" name="{{flashcard.file_name}}-relevance" id="relevance3" value="3"
+                            class="option-input radio"> 3</label><br>
+                    <label><input type="radio" name="{{flashcard.file_name}}-relevance" id="relevance4" value="4"
+                            class="option-input radio"> 4</label><br>
+                    <label><input type="radio" name="{{flashcard.file_name}}-relevance" id="relevance5" value="5"
+                            class="option-input radio"> 5 (Extremely relevant)</label><br>
+                    </fieldset><br>
+
+                    <fieldset id="fieldset_comprehensive" class="container_radio_buttons">
+                        <p>How comprehensive is the created flashcard in respect to the content on the left
+                            Highlighted in
+                            Yellow?</p>
+                        <label><input type="radio" name="{{flashcard.file_name}}-comprehensive" id="comprehensive1"
+                                value="1" class="option-input radio" required> 1 (Not at all
+                            comprehensive)</label><br>
+                        <label><input type="radio" name="{{flashcard.file_name}}-comprehensive" id="comprehensive2"
+                                value="2" class="option-input radio"> 2</label><br>
+                        <label><input type="radio" name="{{flashcard.file_name}}-comprehensive" id="comprehensive3"
+                                value="3" class="option-input radio"> 3</label><br>
+                        <label><input type="radio" name="{{flashcard.file_name}}-comprehensive" id="comprehensive4"
+                                value="4" class="option-input radio"> 4</label><br>
+                        <label><input type="radio" name="{{flashcard.file_name}}-comprehensive" id="comprehensive5"
+                                value="5" class="option-input radio"> 5 (Extremely comprehensive)</label><br>
+                    </fieldset><br>
+
+                    <fieldset id="fieldset_accuracy" class="container_radio_buttons">
+                        <p>How accurate is the created flashcard in respect to the content on the left Highlighted
+                            in
+                            Yellow?</p>
+                        <label><input type="radio" name="{{flashcard.file_name}}-accuracy" id="accuracy1" value="1"
+                                class="option-input radio" required> 1 (Not accurate)</label><br>
+                        <label><input type="radio" name="{{flashcard.file_name}}-accuracy" id="accuracy2" value="2"
+                                class="option-input radio"> 2</label><br>
+                        <label><input type="radio" name="{{flashcard.file_name}}-accuracy" id="accuracy3" value="3"
+                                class="option-input radio"> 3</label><br>
+                        <label><input type="radio" name="{{flashcard.file_name}}-accuracy" id="accuracy4" value="4"
+                                class="option-input radio"> 4</label><br>
+                        <label><input type="radio" name="{{flashcard.file_name}}-accuracy" id="accuracy5" value="5"
+                                class="option-input radio"> 5 (Extremely accurate)</label><br>
+                    </fieldset><br>
+                    <br>
+            </div>
         </div>
-        <div style="clear: both;">
-            <button id="review-completed" class="button blue" onclick="showquestions();">I have completed my review</button>
-        </div>
-        <div style="clear: both; display: none" id="final-questions">
-            <form action="experiment_concluded" method="post" id="current_form">
-                <!-- "diff_data" is a fieldset with a textarea inside containing JSON formatted log data. Doing this
-                we do not need to manipulate data in a submission function due Flask post request mechanics-->
-                <fieldset id="diff_data" hidden>
-                    <textarea name="hidden_log" id="hidden_log"></textarea>
-                </fieldset>
-                 {{ md_body|safe }}
-                <br>
-                <fieldset id="fieldset_question_5" class="container_radio_buttons">
-                    <p>How long have you been interrupted during the execution of the review?</p>
-                    <label><input type="radio" name="question_interruption_time" id="question_interruption_time_a0" value="0" class="option-input radio" required>No interruption time</label><br>
-                    <label><input type="radio" name="question_interruption_time" id="question_interruption_time_a1" value="1" class="option-input radio">1-2 minutes</label><br>
-                    <label><input type="radio" name="question_interruption_time" id="question_interruption_time_a2" value="2" class="option-input radio">up to 5 minutes</label><br>
-                    <label><input type="radio" name="question_interruption_time" id="question_interruption_time_a3" value="3" class="option-input radio">up to 10 minutes</label><br>
-                    <label><input type="radio" name="question_interruption_time" id="question_interruption_time_a4" value="4" class="option-input radio">more than 10 minutes</label><br>
-                </fieldset>
-                <br>
-                <button type="submit" id="submitter" class="button blue">Next ►</button>
-            </form>
-        </div>
+        {% endfor %}
     </div>
+
 </body>
+
 </html>
