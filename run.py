@@ -296,10 +296,13 @@ def run_experiment():
 
         flashcards_df = pl.read_parquet(f"resources/experiments/{fcr_file}")
 
+    
         flashcards = []
         for i, flashcard in enumerate(flashcards_df.rows(named=True)):
-            if i >= 2:
-                break
+            if flashcard["file_name"] == "exercises.pdf":
+                continue
+            if flashcard["file_name"] == "summary.pdf":
+                continue
             flashcards.append(
                 Flashcard(
                     front=flashcard["front"],
