@@ -137,7 +137,7 @@
                                 class="option-input radio"> 5 (Extremely accurate)</label><br>
                     </fieldset><br>
                     <br>
-                    <p> Loop Index: {{loop.index}} </p>
+                    <!-- <p> Loop Index: {{loop.index}} </p> -->
                     <button type="button" onclick="showNextFlashcard({{loop.index}})" class="button blue">Submit &
                         Next</button>
                 </form>
@@ -209,6 +209,17 @@
         }
 
         async function showNextFlashcard(currentIndex) {
+
+            // Check if all responses are filled
+            let flashcard = document.getElementById('flashcard-' + currentIndex);
+            let inputs = flashcard.querySelectorAll('input[type="radio"]');
+            let allResponsesFilled = Array.from(inputs).some(input => input.checked);
+
+            if (!allResponsesFilled) {
+                alert('Please fill all responses before proceeding');
+                return;
+            }
+
 
             saveResponses(currentIndex);
 
