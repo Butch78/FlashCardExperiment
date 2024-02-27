@@ -62,88 +62,32 @@
             margin-bottom: 10px;
         }
     </style>
-
-
-
     <div id="flashcards-container">
-        {% for flashcard in flashcards %}
+        {% block section %}
         <div class="flashcard-container" id="flashcard-{{ loop.index }}" style="display: none;">
             <div class="cards">
                 <div class="container">
                     <div class="pdf-viewer">
-                        <iframe src="/pdfs/{{ flashcard.file_name }}" width="100%" height="600px" loading="lazy"
+                        <iframe src="/pdfs/{{ section.file_name }}" width="100%" height="600px" loading="lazy"
                             title="PDF-file"></iframe>
                     </div>
                     <div class="sidebar">
-                        <h2>{{ flashcard.section_heading }}</h2>
+                        <h2>{{ section.section_heading }}</h2>
                         <div class="flashcard">
                             <div class="front">
                                 <h3>Front</h3>
-                                <textarea> </textarea>
+                                <textarea id="front"></textarea>
                             </div>
                             <div class="back">
                                 <h3>Back</h3>
-                                <textarea> </textarea>
+                                <textarea id="back"></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <br>
-            <div class="questions">
-                <form action="experiment" method="post" id="current_form">
-                    <fieldset id="fieldset_relevance" class="container_radio_buttons">
-                        <p>How relevant is the above created flashcard in respect to the content on the left highlighted
-                            in yellow?</p>
-                        <label><input type="radio" name="{{flashcard.file_name}}-relevance" id="relevance1" value="1"
-                                class="option-input radio" required> 1 (Not relevant at all)</label><br>
-                        <label><input type="radio" name="{{flashcard.file_name}}-relevance" id="relevance2" value="2"
-                                class="option-input radio"> 2 (Slightly relevant)</label><br>
-                        <label><input type="radio" name="{{flashcard.file_name}}-relevance" id="relevance3" value="3"
-                                class="option-input radio"> 3 (Moderately relevant)</label><br>
-                        <label><input type="radio" name="{{flashcard.file_name}}-relevance" id="relevance4" value="4"
-                                class="option-input radio"> 4 (Very relevant)</label><br>
-                        <label><input type="radio" name="{{flashcard.file_name}}-relevance" id="relevance5" value="5"
-                                class="option-input radio"> 5 (Extremely relevant)</label><br>
-                    </fieldset><br>
-
-                    <fieldset id="fieldset_comprehensive" class="container_radio_buttons">
-                        <p>How comprehensive is the created flashcard in respect to the content on the left highlighted
-                            in yellow?</p>
-                        <label><input type="radio" name="{{flashcard.file_name}}-comprehensive" id="comprehensive1"
-                                value="1" class="option-input radio" required> 1 (Not at all comprehensive)</label><br>
-                        <label><input type="radio" name="{{flashcard.file_name}}-comprehensive" id="comprehensive2"
-                                value="2" class="option-input radio"> 2 (Slightly comprehensive)</label><br>
-                        <label><input type="radio" name="{{flashcard.file_name}}-comprehensive" id="comprehensive3"
-                                value="3" class="option-input radio"> 3 (Moderately comprehensive)</label><br>
-                        <label><input type="radio" name="{{flashcard.file_name}}-comprehensive" id="comprehensive4"
-                                value="4" class="option-input radio"> 4 (Very comprehensive)</label><br>
-                        <label><input type="radio" name="{{flashcard.file_name}}-comprehensive" id="comprehensive5"
-                                value="5" class="option-input radio"> 5 (Extremely comprehensive)</label><br>
-                    </fieldset><br>
-
-                    <fieldset id="fieldset_accuracy" class="container_radio_buttons">
-                        <p>How accurate is the created flashcard in respect to the content on the left highlighted in
-                            yellow?</p>
-                        <label><input type="radio" name="{{flashcard.file_name}}-accuracy" id="accuracy1" value="1"
-                                class="option-input radio" required> 1 (Not accurate)</label><br>
-                        <label><input type="radio" name="{{flashcard.file_name}}-accuracy" id="accuracy2" value="2"
-                                class="option-input radio"> 2 (Slightly accurate)</label><br>
-                        <label><input type="radio" name="{{flashcard.file_name}}-accuracy" id="accuracy3" value="3"
-                                class="option-input radio"> 3 (Moderately accurate)</label><br>
-                        <label><input type="radio" name="{{flashcard.file_name}}-accuracy" id="accuracy4" value="4"
-                                class="option-input radio"> 4 (Very accurate)</label><br>
-                        <label><input type="radio" name="{{flashcard.file_name}}-accuracy" id="accuracy5" value="5"
-                                class="option-input radio"> 5 (Extremely accurate)</label><br>
-                    </fieldset><br>
-                    <br>
-                    <!-- <p> Loop Index: {{loop.index}} </p> -->
-                    <button type="button" onclick="showNextFlashcard({{loop.index}})" class="button blue">Submit &
-                        Next</button>
-                </form>
-            </div>
         </div>
-        {% endfor %}
+        {% endblock %}
     </div>
 
     <script>
