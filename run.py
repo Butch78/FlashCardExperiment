@@ -1,20 +1,25 @@
 import json
 import os
+import random
 import uuid
-from collections import Counter
-from datetime import datetime
 import sys
 
 from flask import Flask, render_template, request, make_response, redirect, url_for
 import polars as pl
-from pydantic import BaseModel
+from schema import User
+
+from collections import Counter
+from datetime import datetime
 
 
-class Flashcard(BaseModel):
-    front: str
-    back: str
-    section_heading: str
-    file_name: str
+from crud.db import (
+    check_database_connection,
+    init_db,
+)
+
+from crud.flashcard import create_flashcard
+from crud.user import create_user
+from crud.section import get_section_assignment
 
 
 # set the project root directory as the templates folder, you can set others.
@@ -64,8 +69,22 @@ experiments_concluded["FC-R1-test"] = 0
 experiments_concluded["FC-R2-control"] = 0
 experiments_concluded["FC-R2-test"] = 0
 
-# Creation of log file based on id name
-html_tags = ["<li", "<ul", "<a"]
+
+def choose_flashcard_review_experiment(user_id: str):
+    """
+    Assigns a user to a flashcard creation section and a review section.
+    This is a simplified version that randomly assigns sections.
+    """
+
+    # Assuming section IDs are strings from "1" to "5"
+    sections = ["1", "2", "3"]
+    flashcard_section_id = random.choice(sections)
+
+    # Ensure the review section is different from the flashcard section
+    review_sections = [s for s in sections if s != flashcard_section_id]
+    review_section_id = random.choice(review_sections)
+
+    return flashcard_section_id, review_section_id
 
 
 def choose_experiment():
@@ -139,49 +158,6 @@ def choose_experiment():
     return fcr, test
 
 
-@app.route("/pdfs/<filename>")
-def serve_pdf(filename):
-    """
-    Serve the PDFs in the folder "resources/pdfs".
-    This is used to serve the iframe in the "experiment.html" page.
-
-
-    :param filename: the name of the file to serve
-    """
-    print(filename)
-    # TODO move chapter_1 to a variable depending on the experiment
-    return app.send_static_file("pdfs/chapter_1/" + filename)
-
-# Loading of Personal Information Survey.
-@app.route("/dem_questions", methods=['GET', 'POST'])
-def load_questions():
-    """
-    Loading of Demographic Questions. These questions can be found and
-    changed in "templates/dem_questions.html"
-    """
-    user_id = request.cookies.get('experiment-userid', 'userNotFound')
-    if request.method == 'POST':
-        data: dict = request.form.to_dict()
-        log_received_data(user_id, data)
-    first_time = request.cookies.get('experiment-dem-questions', 'experiment-dem-not_done')
-
-    if first_time == 'experiment-dem-not_done':
-        log_data(str(user_id), "start - dem", "dem_questions")
-        resp = make_response(render_template('dem_questions.html',
-                                             title="Demographics Questions"))
-        resp.set_cookie('experiment-final', 'experiment-final-done')
-        resp.set_cookie('experiment-survey', 'experiment-survey-done')
-        return resp
-    else:
-        return redirect(url_for('already_done'))
-
-
-@app.route('/data_policy', methods=['GET', 'POST'])
-def data_policy():
-    resp = make_response(render_template("data_policy.html", title='Data Policy'))
-    resp.set_cookie('data_policy', 'open')
-    return resp
-
 @app.route("/")
 def index():
     """
@@ -201,6 +177,82 @@ def index():
         user_id = uuid.uuid4()
         resp.set_cookie("experiment-userid", str(user_id))
         print(f"Userid was None, now is {user_id}")
+
+        section_assignment = choose_flashcard_review_experiment(user_id)
+
+        create_user(
+            User(
+                id=str(user_id),
+                ai=False,
+                flashcard_section_id=section_assignment[0],
+                review_section_id=section_assignment[1],
+            )
+        )
+
+    return resp
+
+
+@app.get("/health")
+def health():
+    if check_database_connection():
+        return "OK"
+    else:
+        return "Database connection failed", 500
+
+
+@app.get("/init_db")
+def db():
+    if init_db():
+        return "OK"
+    else:
+        return "Database connection failed", 500
+
+
+@app.route("/pdfs/<filename>")
+def serve_pdf(filename):
+    """
+    Serve the PDFs in the folder "resources/pdfs".
+    This is used to serve the iframe in the "experiment.html" page.
+
+
+    :param filename: the name of the file to serve
+    """
+    print(filename)
+    # TODO move chapter_1 to a variable depending on the experiment
+    return app.send_static_file("pdfs/chapter_1/" + filename)
+
+
+# Loading of Personal Information Survey.
+@app.route("/dem_questions", methods=["GET", "POST"])
+def load_questions():
+    """
+    Loading of Demographic Questions. These questions can be found and
+    changed in "templates/dem_questions.html"
+    """
+    user_id = request.cookies.get("experiment-userid", "userNotFound")
+    if request.method == "POST":
+        data: dict = request.form.to_dict()
+        log_received_data(user_id, data)
+    first_time = request.cookies.get(
+        "experiment-dem-questions", "experiment-dem-not_done"
+    )
+
+    if first_time == "experiment-dem-not_done":
+        log_data(str(user_id), "start - dem", "dem_questions")
+        resp = make_response(
+            render_template("dem_questions.html", title="Demographics Questions")
+        )
+        resp.set_cookie("experiment-final", "experiment-final-done")
+        resp.set_cookie("experiment-survey", "experiment-survey-done")
+        return resp
+    else:
+        return redirect(url_for("already_done"))
+
+
+@app.route("/data_policy", methods=["GET", "POST"])
+def data_policy():
+    resp = make_response(render_template("data_policy.html", title="Data Policy"))
+    resp.set_cookie("data_policy", "open")
     return resp
 
 
@@ -213,6 +265,7 @@ def start():
     user_id = request.cookies.get("experiment-userid", "userNotFound")
     if request.method == "POST":
         data: dict = request.form.to_dict()
+        # save
         log_received_data(user_id, data)
 
     # to avoid people re-doing the experiment, we set a cookie.
@@ -268,9 +321,33 @@ def init_experiment():
     )
     resp = make_response(redirect(url_for("run_experiment")))
     resp.set_cookie("experiment-init-questions", "init-questions-done")
-    resp.set_cookie("experiment-experimentCRtype", fcr_file)
-    resp.set_cookie("experiment-experimentCRistest", str(is_test))
 
+    return resp
+
+
+@app.route("/flashcard", methods=["POST"])
+def flashcard():
+    """
+    This function is called when the user creates a Flash Card.
+    """
+    user_id = request.cookies.get("experiment-userid", "userNotFound")
+    if request.method == "POST":
+        data: dict = request.form.to_dict()
+        print(data)
+        log_received_data(user_id, data)
+        create_flashcard(Flashcard(**data))
+
+    log_data(str(user_id), "start", "fcr-creation")
+
+    section = get_section_assignment(user_id)
+
+    resp = make_response(
+        render_template(
+            "create_flashcard.html",
+            title="Create Flash Card",
+            section=section,
+        )
+    )
     return resp
 
 
@@ -296,7 +373,6 @@ def run_experiment():
 
         flashcards_df = pl.read_parquet(f"resources/experiments/{fcr_file}")
 
-    
         flashcards = []
         for i, flashcard in enumerate(flashcards_df.rows(named=True)):
             if flashcard["file_name"] == "exercises.pdf":
