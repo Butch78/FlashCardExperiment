@@ -11,20 +11,19 @@
 </head>
 
 <body>
-
-    <div>
+    {% block title %}
+    <div class="create-flashcard-introduction">
         <p>
-        <h1>Experiment</h1>
+        <h1>{{ title }}</h1>
         </p>
-        <p>We are now going to show you the Generated FlashCards. The source Text is Highlighted on the left, the
-            Generated FlashCard is on the right</p>
-        <p>For the scientific validity of this experiment, it is vital that the review task is taken <b>very
-                seriously</b>.
+        <p>You are now tasked with creating a FlashCard. The source Text for the your Flashcard is Highlighted on the
+            left, the input boxes for
+            the front and back of the card are on the right. </p>
+        <p>For the scientific validity of this experiment, please enter how you would be create the best study material
+            for your own future learning!
         </p>
-        <p>For each flashcard, you will be asked to evaluate the relevance, comprehensiveness, and accuracy of the
-            generated flashcard in respect to the content on the left highlighted in yellow.</p>
-
     </div>
+    {% endblock %}
 
 
     <style>
@@ -64,7 +63,7 @@
     </style>
     <div id="flashcards-container">
         {% block section %}
-        <div class="flashcard-container" id="flashcard-{{ loop.index }}" style="display: none;">
+        <div class="flashcard-container" id="flashcard-{{ section_heading }}">
             <div class="cards">
                 <div class="container">
                     <div class="pdf-viewer">
@@ -89,110 +88,45 @@
         </div>
         {% endblock %}
     </div>
-
+    <div class="questions">
+        <form action="/experiment" method="post" id="current_form">
+            <button type="button" onclick="submitFlashCard()" class="button blue">Submit FlashCard</button>
+        </form>
+    </div>
     <script>
+        function submitFlashCard() {
+            const frontText = document.getElementById("front").value.trim();
+            const backText = document.getElementById("back").value.trim();
 
-        async function submitResponses() {
-            // Create a FormData object
+            // Check if both "front" and "back" text areas are filled out
+            if (frontText === "" || backText === "") {
+                alert("Please fill out both the front and back of the flashcard.");
+                return; // Stop the function if one of the fields is empty
+            }
+
+            // If both are filled, proceed to submit
             var formData = new FormData();
+            formData.append("front", frontText);
+            formData.append("back", backText);
 
-            // Add all responses from localStorage to formData
-            for (var i = 0; i < localStorage.length; i++) {
-                var key = localStorage.key(i);
-                var value = localStorage.getItem(key);
-                formData.append(key, value);
-            }
-            // Send the form data
-            try {
-                const response = await fetch('/results', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                return;
-            }
-
-            // Clear localStorage
-            localStorage.clear();
-
-            // Redirect to a completion page or show a completion message
-            window.location.href = '/dem_questions';
+            // Send the form data using fetch API
+            fetch('/flashcard', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    console.log(text);
+                    // Redirect or handle success response
+                    window.location.href = '/dem_questions'; // Redirect on successful submission
+                })
+                .catch(error => console.error('Error:', error));
         }
-
-
-        document.addEventListener('DOMContentLoaded', (event) => {
-            // Attempt to retrieve the current index from localStorage, defaulting to 1 if not found
-            let currentIndex = parseInt(localStorage.getItem('currentIndex') || '1');
-
-            // Display the current flashcard based on the retrieved or default index
-            let currentCard = document.getElementById('flashcard-' + currentIndex);
-            if (currentCard) {
-                currentCard.style.display = 'block';
-            } else {
-                // If no current card is found, show the first flashcard and reset currentIndex to 1
-                document.getElementById('flashcard-1').style.display = 'block';
-                localStorage.setItem('currentIndex', '1');
-            }
-        });
-
-        function saveResponses(index) {
-            let flashcard = document.getElementById('flashcard-' + index);
-            if (!flashcard) return;
-
-            let inputs = flashcard.querySelectorAll('input[type="radio"]');
-            inputs.forEach(input => {
-                if (input.checked) {
-                    localStorage.setItem(input.name + '-' + index, input.value);
-                }
-            });
-        }
-
-        async function showNextFlashcard(currentIndex) {
-
-            // Check if all responses are filled
-            let flashcard = document.getElementById('flashcard-' + currentIndex);
-            let inputs = flashcard.querySelectorAll('input[type="radio"]');
-            let allResponsesFilled = Array.from(inputs).some(input => input.checked);
-
-            if (!allResponsesFilled) {
-                alert('Please fill all responses before proceeding');
-                return;
-            }
-
-
-            saveResponses(currentIndex);
-
-            // Hide the current flashcard
-            let currentCard = document.getElementById('flashcard-' + currentIndex);
-            if (currentCard) {
-                currentCard.style.display = 'none';
-            }
-
-            // Increment the currentIndex and update localStorage
-            let nextIndex = currentIndex + 1;
-            localStorage.setItem('currentIndex', nextIndex.toString());
-
-            // Attempt to show the next flashcard
-            let nextCard = document.getElementById('flashcard-' + nextIndex);
-            if (nextCard) {
-                nextCard.style.display = 'block';
-            } else {
-                // If there is no next flashcard, perform completion actions
-                document.cookie = "experiment-is_done=DONE; path=/";
-                submitResponses(); // Adjust this function as needed
-                // Consider resetting or clearing the currentIndex in localStorage after completion
-                localStorage.removeItem('currentIndex');
-            }
-        }
-
-        // Ensure your existing submitResponses function or any form submission logic 
-        // appropriately prevents default submission if necessary and calls this function.
-
     </script>
 </body>
 

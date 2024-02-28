@@ -36,108 +36,132 @@
     <section class="content">
         <p>Please answer the following questions before starting the experiment:</p><br>
         <form action="/experiment/init" method="post" id="current_form">
-            <fieldset id="fieldset_question_english" class="container_radio_buttons">
+            <fieldset id="fieldset_english_level" class="container_radio_buttons">
                 <p>What is your level of English?</p>
-                <label><input type="radio" name="question_english" id="qenglisha0" value="0" class="option-input radio"
+                <label><input type="radio" name="english_level" id="qenglisha0" value="0" class="option-input radio"
                         required>Elementary proficiency (you can communicate/understand the most basic
                     needs)</label><br>
-                <label><input type="radio" name="question_english" id="qenglisha1" value="1"
+                <label><input type="radio" name="english_level" id="qenglisha1" value="1"
                         class="option-input radio">Limited working proficiency (you can respond simply and understand
                     simple sentences)</label><br>
-                <label><input type="radio" name="question_english" id="qenglisha2" value="2"
+                <label><input type="radio" name="english_level" id="qenglisha2" value="2"
                         class="option-input radio">Professional working proficiency (you can discuss/understand topics
                     in particular interests and special fields of competence with reasonable ease)</label><br>
-                <label><input type="radio" name="question_english" id="qenglisha3" value="3"
+                <label><input type="radio" name="english_level" id="qenglisha3" value="3"
                         class="option-input radio">Full professional proficiency (your can respond/read appropriately
                     even in unfamiliar grounds or situations)</label><br>
-                <label><input type="radio" name="question_english" id="qenglisha4" value="4"
+                <label><input type="radio" name="english_level" id="qenglisha4" value="4"
                         class="option-input radio">Native or bilingual proficiency</label><br>
             </fieldset><br>
-            <fieldset id="fieldset_question_1" class="container_radio_buttons">
+            <fieldset id="fieldset_education_level" class="container_radio_buttons">
                 <p>What is your highest achieved level of education?</p>
-                <label><input type="radio" name="question_1" id="q1a0" value="0" class="option-input radio"
+                <label><input type="radio" name="education_level" id="q1a0" value="0" class="option-input radio"
                         required>High School but did not graduate</label><br>
-                <label><input type="radio" name="question_1" id="q1a1" value="1" class="option-input radio">High School
+                <label><input type="radio" name="education_level" id="q1a1" value="1" class="option-input radio">High
+                    School
                     graduate or GED</label><br>
-                <label><input type="radio" name="question_1" id="q1a2" value="2" class="option-input radio">Some college
+                <label><input type="radio" name="education_level" id="q1a2" value="2" class="option-input radio">Some
+                    college
                     or 2-year degree</label><br>
-                <label><input type="radio" name="question_1" id="q1a3" value="3" class="option-input radio">Bachelor in
+                <label><input type="radio" name="education_level" id="q1a3" value="3"
+                        class="option-input radio">Bachelor in
                     CS (Computer Science)</label><br>
-                <label><input type="radio" name="question_1" id="q1a4" value="4" class="option-input radio">Bachelor in
+                <label><input type="radio" name="education_level" id="q1a4" value="4"
+                        class="option-input radio">Bachelor in
                     STEM (Science, Technology, Engineering and Mathematics)</label><br>
-                <label><input type="radio" name="question_1" id="q1a5" value="5" class="option-input radio">Bachelor in
+                <label><input type="radio" name="education_level" id="q1a5" value="5"
+                        class="option-input radio">Bachelor in
                     a different area than CS or STEM</label><br>
-                <label><input type="radio" name="question_1" id="q1a6" value="6" class="option-input radio">Master in
+                <label><input type="radio" name="education_level" id="q1a6" value="6" class="option-input radio">Master
+                    in
                     CS</label><br>
-                <label><input type="radio" name="question_1" id="q1a7" value="7" class="option-input radio">Master in
+                <label><input type="radio" name="education_level" id="q1a7" value="7" class="option-input radio">Master
+                    in
                     STEM</label><br>
-                <label><input type="radio" name="question_1" id="q1a8" value="8" class="option-input radio">Master in a
+                <label><input type="radio" name="education_level" id="q1a8" value="8" class="option-input radio">Master
+                    in a
                     different area than CS or STEM</label><br>
-                <label><input type="radio" name="question_1" id="q1a9" value="9" class="option-input radio">PhD or
+                <label><input type="radio" name="education_level" id="q1a9" value="9" class="option-input radio">PhD or
                     higher academic title in CS</label><br>
-                <label><input type="radio" name="question_1" id="q1a10" value="10" class="option-input radio">PhD or
+                <label><input type="radio" name="education_level" id="q1a10" value="10" class="option-input radio">PhD
+                    or
                     higher academic title in STEM</label><br>
-                <label><input type="radio" name="question_1" id="q1a11" value="11" class="option-input radio">PhD or
+                <label><input type="radio" name="education_level" id="q1a11" value="11" class="option-input radio">PhD
+                    or
                     higher academic title in a different area than CS or STEM</label><br>
             </fieldset><br>
-            <fieldset id="fieldset_question_2" class="container_radio_buttons">
+            <fieldset id="fieldset_flashcard_experience" class="container_radio_buttons">
                 <p>Have you previously made Flashcard electronic or in paper form?</p>
-                <label><input type="radio" name="question_2" id="q2a0" value="0" class="option-input radio" required>I
+                <label><input type="radio" name="flashcard_experience" id="q2a0" value="0" class="option-input radio"
+                        required>I
                     have never used FlashCards</label><br>
-                <label><input type="radio" name="question_2" id="q2a1" value="1" class="option-input radio">Electronic
+                <label><input type="radio" name="flashcard_experience" id="q2a1" value="1"
+                        class="option-input radio">Electronic
                     Flashcards</label><br>
-                <label><input type="radio" name="question_2" id="q2a2" value="2" class="option-input radio">Paper
+                <label><input type="radio" name="flashcard_experience" id="q2a2" value="2"
+                        class="option-input radio">Paper
                     Flashcards</label><br>
-                <label><input type="radio" name="question_2" id="q2a3" value="3" class="option-input radio">I have made
-                    Digital & Flashcards in the Past</label><br>
+                <label><input type="radio" name="flashcard_experience" id="q2a3" value="3" class="option-input radio">I
+                    have made
+                    Digital & Paper Flashcards in the Past</label><br>
             </fieldset><br>
-            <fieldset id="fieldset_question_3" class="container_radio_buttons">
+            <fieldset id="fieldset_flashcard_preference" class="container_radio_buttons">
                 <p>If you have used Flashcards in the past, Do you prefer Digital or Paper Flashcards?</p>
-                <label><input type="radio" name="question_3" id="q3a0" value="0" class="option-input radio" required>No
+                <label><input type="radio" name="flashcard_preference" id="q3a0" value="0" class="option-input radio"
+                        required>No
                     preference </label><br>
-                <label><input type="radio" name="question_3" id="q3a1" value="1" class="option-input radio">Digital
+                <label><input type="radio" name="flashcard_preference" id="q3a1" value="1"
+                        class="option-input radio">Digital
                     Flashcards</label><br>
-                <label><input type="radio" name="question_3" id="q3a2" value="2" class="option-input radio">Paper
+                <label><input type="radio" name="flashcard_preference" id="q3a2" value="2"
+                        class="option-input radio">Paper
                     Flashcards</label><br>
             </fieldset><br>
 
 
-            <fieldset id="fieldset_question_4" class="container_radio_buttons">
+            <fieldset id="fieldset_flashcard_usage_frequency" class="container_radio_buttons">
                 <p>How often do you use Flashcards?</p>
-                <label><input type="radio" name="question_4" id="q4a0" value="0" class="option-input radio" required>I
+                <label><input type="radio" name="flashcard_usage_frequency" id="q4a0" value="0"
+                        class="option-input radio" required>I
                     have never used Flashcards</label><br>
-                <label><input type="radio" name="question_4" id="q4a1" value="1" class="option-input radio">Once or
+                <label><input type="radio" name="flashcard_usage_frequency" id="q4a1" value="1"
+                        class="option-input radio">Once or
                     Twice a year</label><br>
-                <label><input type="radio" name="question_4" id="q4a2" value="2"
+                <label><input type="radio" name="flashcard_usage_frequency" id="q4a2" value="2"
                         class="option-input radio">Monthly</label><br>
-                <label><input type="radio" name="question_4" id="q4a3" value="3"
+                <label><input type="radio" name="flashcard_usage_frequency" id="q4a3" value="3"
                         class="option-input radio">Weekly</label><br>
-                <label><input type="radio" name="question_4" id="q4a4" value="4"
+                <label><input type="radio" name="flashcard_usage_frequency" id="q4a4" value="4"
                         class="option-input radio">Daily</label><br>
             </fieldset><br>
-            <fieldset id="fieldset_question_5" class="container_radio_buttons">
+            <fieldset id="fieldset_study_duration" class="container_radio_buttons">
                 <p>If you do use Flashcards, how long do you normally study them for in one session?</p>
-                <label><input type="radio" name="question_5" id="q5a0" value="0" class="option-input radio" required>Not
+                <label><input type="radio" name="study_duration" id="q5a0" value="0" class="option-input radio"
+                        required>Not
                     at all</label><br>
-                <label><input type="radio" name="question_5" id="q5a1" value="1" class="option-input radio">Less than 10
+                <label><input type="radio" name="study_duration" id="q5a1" value="1" class="option-input radio">Less
+                    than 10
                     minutes per session</label><br>
-                <label><input type="radio" name="question_5" id="q5a2" value="2" class="option-input radio">10 to 30
+                <label><input type="radio" name="study_duration" id="q5a2" value="2" class="option-input radio">10 to 30
                     minutes per session</label><br>
-                <label><input type="radio" name="question_5" id="q5a3" value="3" class="option-input radio">Greater than
+                <label><input type="radio" name="study_duration" id="q5a3" value="3" class="option-input radio">Greater
+                    than
                     30
                     minutes per session</label><br>
             </fieldset><br>
-            <fieldset id="fieldset_question_6" class="container_radio_buttons">
+            <fieldset id="fieldset_current_tiredness" class="container_radio_buttons">
                 <p>How tired do you feel at the moment?</p>
-                <label><input type="radio" name="question_6" id="q6a0" value="0" class="option-input radio"
+                <label><input type="radio" name="current_tiredness" id="q6a0" value="0" class="option-input radio"
                         required>very tired</label><br>
-                <label><input type="radio" name="question_6" id="q6a1" value="1" class="option-input radio">moderately
+                <label><input type="radio" name="current_tiredness" id="q6a1" value="1"
+                        class="option-input radio">moderately
                     tired</label><br>
-                <label><input type="radio" name="question_6" id="q6a2" value="2"
+                <label><input type="radio" name="current_tiredness" id="q6a2" value="2"
                         class="option-input radio">neutral</label><br>
-                <label><input type="radio" name="question_6" id="q6a3" value="3" class="option-input radio">moderately
+                <label><input type="radio" name="current_tiredness" id="q6a3" value="3"
+                        class="option-input radio">moderately
                     fit</label><br>
-                <label><input type="radio" name="question_6" id="q6a4" value="4" class="option-input radio">very
+                <label><input type="radio" name="current_tiredness" id="q6a4" value="4" class="option-input radio">very
                     fit</label><br>
             </fieldset><br>
             <button type="submit" id="submitter" class="button blue">Next</button>

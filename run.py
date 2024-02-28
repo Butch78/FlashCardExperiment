@@ -2,13 +2,10 @@ import json
 import os
 import random
 import uuid
-import sys
 
 from flask import Flask, render_template, request, make_response, redirect, url_for
-import polars as pl
-from schema import User
+from schema import CreateFlashcard, ParticipantForm, PreExperimentFormData, User
 
-from collections import Counter
 from datetime import datetime
 
 
@@ -17,9 +14,17 @@ from crud.db import (
     init_db,
 )
 
-from crud.flashcard import create_flashcard
-from crud.user import create_user
-from crud.section import get_section_assignment
+from crud.flashcard import create_flashcard, get_flashcards
+from crud.user import (
+    create_initial_questions,
+    create_participant,
+    create_user,
+    get_user,
+)
+from crud.section import (
+    get_section,
+    get_section_by_name,
+)
 
 
 # set the project root directory as the templates folder, you can set others.
@@ -31,44 +36,6 @@ experiments_path = os.path.join("resources", "experiments")
 # The list experiments contains all the files in the experiment directory
 (_, _, experiments) = next(os.walk(experiments_path))
 
-# Counters of how many experiments have started
-# For this example, the possible options are:
-
-# FlashCard Review -- Pilot1 control // Shirin Chapter 1
-# FlashCard Review -- Pilot1 test // LLM Chapter 1
-
-# FlashCard Review -- Experiment1 control // Shirin Chapter 2
-# FlashCard Review -- Experiment1 test // LLM Chapter 2
-# FlashCard Review -- Experiment2 control // Shirin Chapter 3
-# FlashCard Review -- Experiment2 test // LLM Chapter 3
-
-experiments_started = Counter()
-
-PILOT = True
-
-# Pilot Experiment
-experiments_started["FC-P1-control"] = 0
-experiments_started["FC-P1-test"] = 0
-
-# Main Experiment
-experiments_started["FC-R1-control"] = 0
-experiments_started["FC-R1-test"] = 0
-experiments_started["FC-R2-control"] = 0
-experiments_started["FC-R2-test"] = 0
-
-# Counters of how many experiments have concluded
-experiments_concluded = Counter()
-
-# Pilot Experiment
-experiments_concluded["FC-P1-control"] = 0
-experiments_concluded["FC-P1-test"] = 0
-
-# Main Experiment
-experiments_concluded["FC-R1-control"] = 0
-experiments_concluded["FC-R1-test"] = 0
-experiments_concluded["FC-R2-control"] = 0
-experiments_concluded["FC-R2-test"] = 0
-
 
 def choose_flashcard_review_experiment(user_id: str):
     """
@@ -76,86 +43,28 @@ def choose_flashcard_review_experiment(user_id: str):
     This is a simplified version that randomly assigns sections.
     """
 
+    # TODO - Implement a more sophisticated assignment algorithm
+
     # Assuming section IDs are strings from "1" to "5"
-    sections = ["1", "2", "3"]
-    flashcard_section_id = random.choice(sections)
+    section_file_names = [
+        "section_2_1_4.pdf",
+        "section_2_2.pdf",
+        "section_2_4_6.pdf",
+        "section_2_4_7.pdf",
+        "section_2_4_8.pdf",
+        "section_2_4_9.pdf",
+    ]
+    flashcard_section_name = random.choice(section_file_names)
 
     # Ensure the review section is different from the flashcard section
-    review_sections = [s for s in sections if s != flashcard_section_id]
-    review_section_id = random.choice(review_sections)
+    review_sections = [s for s in section_file_names if s != flashcard_section_name]
+    review_section_name = random.choice(review_sections)
 
-    return flashcard_section_id, review_section_id
+    flashcard_section = get_section_by_name(flashcard_section_name)
+    review_section = get_section_by_name(review_section_name)
 
-
-def choose_experiment():
-    """
-    Assign an experiment to a new user. We choose the type of experiment that
-    has the least amount of concluded experiments.
-    If we have more than one such case, we choose the one that has the least
-    amount of started experiments.
-    """
-    min_val = experiments_concluded.most_common()[-1][1]
-
-    mins = []
-    for k in experiments_concluded:
-        if experiments_concluded[k] == min_val:
-            mins.append(k)
-
-    if len(mins) > 1:
-        # more than 1 type has the same amount of concluded
-        # experiments. Hence, we choose the one that has the least amount of
-        # started ones
-        min_val = sys.maxsize
-        to_assing = ""
-        for k in mins:
-            if experiments_started[k] < min_val:
-                min_val = experiments_started[k]
-                to_assing = k
-    else:
-        to_assing = mins[0]
-
-    print("Assigned to " + to_assing)
-
-    # ADD Code for PILOT
-    if PILOT:
-        if to_assing.startswith("FC-P1"):
-            # assign to Pilot/Chapter 1
-
-            if to_assing.endswith("control"):
-                # assigned to control group
-                fcr = "control_flashcards_chapter_1.parquet"
-                test = False
-            else:
-                # assigned to test group
-                fcr = "test_flashcards_chapter_1.parquet"
-                test = True
-
-    else:
-        # Assign Chapter 2 or 3
-        if to_assing.startswith("FC-R2"):
-            # assign to experiment 1
-            if to_assing.split("-")[0].endswith("control"):
-                # assigned to control group
-                test = False
-                fcr = "control_flashcards_chapter_2.parquet"
-            else:
-                # assigned to test group
-                test = True
-                fcr = "test_flashcards_chapter_2.parquet"
-        else:
-            # assign to experiment 2
-            if to_assing.split("-")[0].endswith("control"):
-                # assigned to control group
-                test = False
-                fcr = "control_flashcards_chapter_3_.parquet"
-            else:
-                # assigned to test group
-                test = True
-                fcr = "test_flashcards_chapter_3.parquet"
-
-    experiments_started[to_assing] += 1
-
-    return fcr, test
+    # Create the section assignment and return the object
+    return flashcard_section, review_section
 
 
 @app.route("/")
@@ -178,14 +87,14 @@ def index():
         resp.set_cookie("experiment-userid", str(user_id))
         print(f"Userid was None, now is {user_id}")
 
-        section_assignment = choose_flashcard_review_experiment(user_id)
+        section_assignment = choose_flashcard_review_experiment(user_id=str(user_id))
 
         create_user(
             User(
                 id=str(user_id),
-                ai=False,
-                flashcard_section_id=section_assignment[0],
-                review_section_id=section_assignment[1],
+                creator="student",
+                flashcard_section_id=section_assignment[0].id,
+                review_section_id=section_assignment[1].id,
             )
         )
 
@@ -219,7 +128,7 @@ def serve_pdf(filename):
     """
     print(filename)
     # TODO move chapter_1 to a variable depending on the experiment
-    return app.send_static_file("pdfs/chapter_1/" + filename)
+    return app.send_static_file("pdfs/chapter_2/" + filename)
 
 
 # Loading of Personal Information Survey.
@@ -265,7 +174,8 @@ def start():
     user_id = request.cookies.get("experiment-userid", "userNotFound")
     if request.method == "POST":
         data: dict = request.form.to_dict()
-        # save
+        print(data)
+        create_participant(ParticipantForm(user_id=user_id, **data))
         log_received_data(user_id, data)
 
     # to avoid people re-doing the experiment, we set a cookie.
@@ -303,43 +213,43 @@ def init_experiment():
     """
 
     user_id = request.cookies.get("experiment-userid", "userNotFound")
-    fcr_file, is_test = choose_experiment()
-    print(fcr_file, is_test)
-    log_data(str(user_id), "setexperimentFCRtype", fcr_file)
-    log_data(str(user_id), "setexperimentFCRistest", str(is_test))
 
     if request.method == "POST":
         data: dict = request.form.to_dict()
         print(data)
         log_received_data(user_id, data)
+        create_initial_questions(PreExperimentFormData(user_id=user_id, **data))
 
-    resp = make_response(
-        render_template(
-            "experiment_example.html",
-            title="Flash Card Review Experiment",
-        )
-    )
-    resp = make_response(redirect(url_for("run_experiment")))
-    resp.set_cookie("experiment-init-questions", "init-questions-done")
-
-    return resp
+    return redirect(url_for("flashcard"))
 
 
-@app.route("/flashcard", methods=["POST"])
+@app.route("/flashcard", methods=["GET", "POST"])
 def flashcard():
     """
     This function is called when the user creates a Flash Card.
     """
+
     user_id = request.cookies.get("experiment-userid", "userNotFound")
+    user = get_user(user_id)
+    section = get_section(user.flashcard_section_id)
+
     if request.method == "POST":
         data: dict = request.form.to_dict()
-        print(data)
         log_received_data(user_id, data)
-        create_flashcard(Flashcard(**data))
+
+        create_flashcard(
+            CreateFlashcard(
+                user_id=user_id,
+                section_id=section.id,
+                file_name=section.file_name,
+                section_heading=section.section_heading,
+                **data,
+            )
+        )
 
     log_data(str(user_id), "start", "fcr-creation")
 
-    section = get_section_assignment(user_id)
+    user = get_user(user_id)
 
     resp = make_response(
         render_template(
@@ -359,7 +269,6 @@ def run_experiment():
     file from "resources/experiments" and populate the page.
     """
     user_id = request.cookies.get("experiment-userid", "userNotFound")
-    fcr_file = request.cookies.get("experiment-experimentCRtype", "not_found")
     if request.method == "POST":
         data: dict = request.form.to_dict()
         print(data)
@@ -367,34 +276,20 @@ def run_experiment():
 
     log_data(str(user_id), "start", "fcr-experiment")
 
+    user_id = request.cookies.get("experiment-userid", "userNotFound")
     exp_is_done = request.cookies.get("experiment-is_done", "not_done")
     if exp_is_done != "DONE":
         # Load from parquet file
 
-        flashcards_df = pl.read_parquet(f"resources/experiments/{fcr_file}")
-
-        flashcards = []
-        for i, flashcard in enumerate(flashcards_df.rows(named=True)):
-            if flashcard["file_name"] == "exercises.pdf":
-                continue
-            if flashcard["file_name"] == "summary.pdf":
-                continue
-            flashcards.append(
-                Flashcard(
-                    front=flashcard["front"],
-                    back=flashcard["back"],
-                    section_heading=flashcard["section_heading"][:-4]
-                    if flashcard["section_heading"].endswith(".txt")
-                    else flashcard["section_heading"],
-                    file_name=flashcard["file_name"],
-                )
-            )
+        user = get_user(user_id)
+        flashcards = get_flashcards(user.review_section_id)
+        print(flashcards)
 
         resp = make_response(
             render_template(
                 "experiment.html",
                 title="Code Review Experiment",
-                flashcards=flashcards,
+                section=get_section(user.review_section_id),
             )
         )
         return resp
@@ -458,47 +353,10 @@ def conclusion():
 
     log_data(str(user_id), "end", "experiment_concluded")
 
-    exp_type = request.cookies.get("experiment-experimentCRtype")
-    exp_is_test = request.cookies.get("experiment-experimentCRistest")
-
-    # update the correspondent counter
-    if exp_type == "files_experiment1" and exp_is_test == "True":
-        experiments_concluded["FC-R1-control"] += 1
-    elif exp_type == "files_experiment1" and exp_is_test == "False":
-        experiments_concluded["FC-R1-test"] += 1
-    elif exp_type == "files_experiment2" and exp_is_test == "True":
-        experiments_concluded["FC-R2-control"] += 1
-    elif exp_type == "files_experiment2" and exp_is_test == "False":
-        experiments_concluded["FC-R2-test"] += 1
-
     conclusion_text = read_files("conclusion.txt")
     return render_template(
         "conclusion.html", title="conclusion", conclusion=conclusion_text
     )
-
-
-def build_experiments(experiment_snippets):
-    codes = []
-    for num_experiment in experiment_snippets:
-        experiment_snippet = experiment_snippets[num_experiment]
-        codes.append(
-            {
-                "id": num_experiment,
-                "filename": experiment_snippet["filename"],
-                "linecount": max(
-                    experiment_snippet["num_lines_L"], experiment_snippet["num_lines_R"]
-                ),
-                "contextLineCount": 1,
-                "left_line_number": 1,
-                "left_content": experiment_snippet["L"],
-                "right_line_number": 1,
-                "right_content": experiment_snippet["R"],
-                "prefix_line_count": 1,
-                "prefix_escaped": 1,
-                "suffix_escaped": 1,
-            }
-        )
-    return codes
 
 
 @app.route("/already_done", methods=["GET", "POST"])

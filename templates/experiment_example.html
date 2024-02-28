@@ -96,7 +96,7 @@
         </div>
 
     </div>
-    <div>
+    <div class=>
         <form action="/experiment/init" id="button-continue">
             <button type="button" class="button blue" style="height: 50px;">I have read the instructions and I want to
                 start the review ►</button><br><br>
@@ -138,16 +138,13 @@
             margin-bottom: 10px;
         }
     </style>
-
-
-
     <div id="flashcards-container">
         {% for flashcard in flashcards %}
-        <div class="flashcard-container" id="flashcard-{{ loop.index }}" style="display: none;">
+        <div class="flashcard-container" id="flashcard-{{ loop.index }}">
             <div class="cards">
                 <div class="container">
                     <div class="pdf-viewer">
-                        <iframe src="/pdfs/section_1_2_1.pdf" width="100%" height="600px" loading="lazy"
+                        <iframe src="/pdfs/section_1_2_2.pdf" width="100%" height="600px" loading="lazy"
                             title="PDF-file"></iframe>
                     </div>
                     <div class="sidebar">
