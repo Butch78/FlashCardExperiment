@@ -1,42 +1,43 @@
 import psycopg2
 import os
 
-from schema import User, ParticipantForm, PreExperimentFormData
+from schema import User, Participant, Demographics
 
 url = os.getenv("DATABASE_URL")
 
 
-def create_participant(participant_form: ParticipantForm):
+def create_participant(participant: Participant):
     """Creates a new participant in the database."""
     with psycopg2.connect(url) as connection:
         with connection.cursor() as cursor:
             cursor.execute(
-                "INSERT INTO participant_responses (donation_preference, donation_other, data_policy_agreement, user_id) VALUES (%s, %s, %s, %s)",
+                "INSERT INTO  pilot_participants (donation_preference, donation_other, data_policy_agreement, user_id) VALUES (%s, %s, %s, %s)",
                 (
-                    participant_form.donation_preference,
-                    participant_form.donation_other,
-                    participant_form.data_policy_agreement,
-                    participant_form.user_id,
+                    participant.donation_preference,
+                    participant.donation_other,
+                    participant.data_policy_agreement,
+                    participant.user_id,
                 ),
             )
 
 
-def create_initial_questions(participant_form: PreExperimentFormData):
+def create_demographic(demographics: Demographics):
     """Create a new PreExperimentFormData in the database."""
 
     with psycopg2.connect(url) as connection:
         with connection.cursor() as cursor:
+            # TODO: Update SQL
             cursor.execute(
-                "INSERT INTO experiment_responses (english_level, education_level, flashcard_experience, flashcard_preference, flashcard_usage_frequency, study_duration, current_tiredness, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO pilot_demographics (english_level, education_level, flashcard_experience, flashcard_preference, flashcard_usage_frequency, study_duration, current_tiredness, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                 (
-                    participant_form.english_level,
-                    participant_form.education_level,
-                    participant_form.flashcard_experience,
-                    participant_form.flashcard_preference,
-                    participant_form.flashcard_usage_frequency,
-                    participant_form.study_duration,
-                    participant_form.current_tiredness,
-                    participant_form.user_id,
+                    demographics.english_level,
+                    demographics.education_level,
+                    demographics.flashcard_experience,
+                    demographics.flashcard_preference,
+                    demographics.flashcard_usage_frequency,
+                    demographics.study_duration,
+                    demographics.current_tiredness,
+                    demographics.user_id,
                 ),
             )
 
@@ -46,7 +47,7 @@ def create_user(user: User):
     with psycopg2.connect(url) as connection:
         with connection.cursor() as cursor:
             cursor.execute(
-                "INSERT INTO users (id, creator, flashcard_section_id, review_section_id) VALUES (%s, %s, %s, %s)",
+                "INSERT INTO pilot_users (id, creator, flashcard_section_id, review_section_id) VALUES (%s, %s, %s, %s)",
                 (
                     user.id,
                     user.creator,
@@ -61,7 +62,7 @@ def get_user(user_id: str) -> User:
     with psycopg2.connect(url) as connection:
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT id, creator, flashcard_section_id, review_section_id FROM users WHERE id = %s",
+                "SELECT id, creator, flashcard_section_id, review_section_id FROM pilot_users WHERE id = %s",
                 (user_id,),
             )
             result = cursor.fetchone()

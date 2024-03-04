@@ -2,9 +2,11 @@ import json
 import os
 import random
 import uuid
+from dotenv import load_dotenv
+
 
 from flask import Flask, render_template, request, make_response, redirect, url_for
-from schema import CreateFlashcard, ParticipantForm, PreExperimentFormData, User
+from schema import CreateFlashcard, Participant, User
 
 from datetime import datetime
 
@@ -16,7 +18,7 @@ from crud.db import (
 
 from crud.flashcard import create_flashcard, get_flashcards
 from crud.user import (
-    create_initial_questions,
+    create_demographic_questions,
     create_participant,
     create_user,
     get_user,
@@ -26,9 +28,13 @@ from crud.section import (
     get_section_by_name,
 )
 
+# Assuming your .env file is in the same directory as your wsgi.py file
+dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
+load_dotenv(dotenv_path)
 
 # set the project root directory as the templates folder, you can set others.
 app = Flask(__name__)
+
 
 # All experiments are saved in the source folder 'resources/experiments'.
 experiments_path = os.path.join("resources", "experiments")
@@ -165,18 +171,29 @@ def data_policy():
     return resp
 
 
-@app.route("/start", methods=["GET", "POST"])
+@app.route("/donations", methods=["POST"])
+def dontations():
+    user_id = request.cookies.get("experiment-userid", "userNotFound")
+    if request.method == "POST":
+        data: dict = request.form.to_dict()
+        print(data)
+        create_participant(Participant(user_id=user_id, **data))
+        log_received_data(user_id, data)
+
+
+@app.route("/dem_questions", methods=["GET", "POST"])
 def start():
     """
     Loading of Personal Information Survey. These questions can be found and
     changed in "templates/initial_questions.html"
     """
     user_id = request.cookies.get("experiment-userid", "userNotFound")
+
     if request.method == "POST":
         data: dict = request.form.to_dict()
         print(data)
-        create_participant(ParticipantForm(user_id=user_id, **data))
         log_received_data(user_id, data)
+        create_demographic_questions(PreExperimentFormData(user_id=user_id, **data))
 
     # to avoid people re-doing the experiment, we set a cookie.
     first_time = request.cookies.get("experiment-init-questions", "first-time")
@@ -218,7 +235,7 @@ def init_experiment():
         data: dict = request.form.to_dict()
         print(data)
         log_received_data(user_id, data)
-        create_initial_questions(PreExperimentFormData(user_id=user_id, **data))
+        create_demographic_questions(PreExperimentFormData(user_id=user_id, **data))
 
     return redirect(url_for("flashcard"))
 
@@ -247,6 +264,8 @@ def flashcard():
             )
         )
 
+        return redirect(url_for("run_experiment"))
+
     log_data(str(user_id), "start", "fcr-creation")
 
     user = get_user(user_id)
@@ -264,9 +283,8 @@ def flashcard():
 @app.route("/experiment", methods=["GET", "POST"])
 def run_experiment():
     """
-    Starts the experiment. This function calls "choose_experiment()" to decide
-    which experiment to assign to the user. Afterwords, it reads the apposite
-    file from "resources/experiments" and populate the page.
+    Starts the experiment. This function calls load_cards get the assinged cards to review to
+    the user.
     """
     user_id = request.cookies.get("experiment-userid", "userNotFound")
     if request.method == "POST":
@@ -283,13 +301,13 @@ def run_experiment():
 
         user = get_user(user_id)
         flashcards = get_flashcards(user.review_section_id)
-        print(flashcards)
+        print("FlashCardS:", flashcards)
 
         resp = make_response(
             render_template(
                 "experiment.html",
                 title="Code Review Experiment",
-                section=get_section(user.review_section_id),
+                flashcards=flashcards,
             )
         )
         return resp

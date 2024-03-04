@@ -15,7 +15,7 @@ def get_section_by_name(name: str) -> Section:
     with psycopg2.connect(url) as connection:
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT id, section_heading, file_name, token_count, character_count FROM sections WHERE file_name = %s",
+                "SELECT id, section_heading, file_name, token_count, character_count FROM pilot_sections WHERE file_name = %s",
                 (name,),
             )
             result = cursor.fetchone()
@@ -41,7 +41,7 @@ def create_section(section: Section):
     with psycopg2.connect(url) as connection:
         with connection.cursor() as cursor:
             cursor.execute(
-                "INSERT INTO sections (id, section_heading, file_name, token_count, character_count) VALUES (%s, %s, %s, %s, %s)",
+                "INSERT INTO pilot_sections (id, section_heading, file_name, token_count, character_count) VALUES (%s, %s, %s, %s, %s)",
                 (
                     section.id,
                     section.section_heading,
@@ -57,7 +57,7 @@ def get_section(section_id: str) -> Section:
     with psycopg2.connect(url) as connection:
         with connection.cursor() as cursor:
             cursor.execute(
-                "SELECT id, section_heading, file_name, token_count, character_count FROM sections WHERE id = %s",
+                "SELECT id, section_heading, file_name, token_count, character_count FROM pilot_sections WHERE id = %s",
                 (section_id,),
             )
             result = cursor.fetchone()

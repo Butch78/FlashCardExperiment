@@ -51,7 +51,7 @@ def write_sections_to_db():
     print(df_chapter_2.head())
 
     df_chapter_2.write_database(
-        table_name="sections",
+        table_name="pilot_sections",
         connection=url,
         engine="adbc",
         if_table_exists="append",
@@ -60,23 +60,38 @@ def write_sections_to_db():
 
 def create_ai_user(user_id: str, temperature: str):
     """
-        CREATE TABLE users (
+        CREATE TABLE pilot_users (
         id UUID PRIMARY KEY,
         creator VARCHAR NOT NULL,
-        flashcard_section_id UUID REFERENCES sections(id),
-        review_section_id UUID REFERENCES sections(id)
+        flashcard_section_id UUID REFERENCES pilot_sections(id),
+        review_section_id UUID REFERENCES pilot_sections(id)
     );
 
     """
     with psycopg2.connect(url) as connection:
         with connection.cursor() as cursor:
             cursor.execute(
-                "INSERT INTO users (id, creator) VALUES (%s, %s)",
+                "INSERT INTO pilot_users (id, creator) VALUES (%s, %s)",
                 (
                     str(user_id),
                     f"gpt4-1106_{temperature}",
                 ),
             )
+
+
+def get_section_id_by_file_name(file_name: str) -> str:
+    # This function should query your database and return the section_id for the given file_name.
+    # Example implementation (you'll need to adjust this to your database schema and setup):
+    with psycopg2.connect(url) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT id FROM pilot_sections WHERE file_name = %s", (file_name,)
+            )
+            result = cursor.fetchone()
+            if result:
+                return result[0]  # Assuming 'id' is the first column
+            else:
+                return None
 
 
 def write_flashcards_to_db():
@@ -99,14 +114,31 @@ def write_flashcards_to_db():
         ]
         df_flashcards = df_flashcards.filter(pl.col("file_name").is_in(file_names))
 
-        df_flashcards.write_database(
-            table_name="flashcards",
-            connection=url,
-            engine="adbc",
-            if_table_exists="append",
-        )
+        flashcards = []
 
-        # with psycopg2.connect(url) as connection:
-        #     with connection.cursor() as cursor:
-        #         cursor.execute(f"UPDATE flashcards SET user_id = '{user_id}'")
-        #     connection.commit()
+        for row in df_flashcards.rows(named=True):
+            flashcards.append(
+                {
+                    "front": row["front"],
+                    "back": row["back"],
+                    "file_name": row["file_name"],
+                    "section_heading": row["section_heading"],
+                    "section_id": get_section_id_by_file_name(row["file_name"]),
+                    "user_id": str(user_id),
+                }
+            )
+
+        with psycopg2.connect(url) as connection:
+            with connection.cursor() as cursor:
+                for flashcard in flashcards:
+                    cursor.execute(
+                        "INSERT INTO pilot_flashcards (front, back, section_id, section_heading, file_name, user_id) VALUES (%s, %s, %s, %s, %s, %s)",
+                        (
+                            flashcard["front"],
+                            flashcard["back"],
+                            flashcard["section_id"],
+                            flashcard["section_heading"],
+                            flashcard["file_name"],
+                            flashcard["user_id"],
+                        ),
+                    )

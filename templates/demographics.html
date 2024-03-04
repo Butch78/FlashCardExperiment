@@ -8,33 +8,12 @@
     <script src="{{ url_for('static', filename='js/jquery.min.js')}}" type="text/javascript"></script>
 
     <link rel="stylesheet" media="all" href="{{ url_for('static', filename='css/style.css')}}" />
-    <script>
-        $(document).ready(function () {
-            var form = document.getElementById('current_form');
-            if (form.attachEvent) {
-                form.attachEvent("submit", processForm);
-            } else {
-                form.addEventListener("submit", processForm);
-            }
-        });
-        function processForm() {
-            var ta0 = document.getElementById("qgendertext");
-            var ta2 = document.getElementById("q2text");
-            if (ta0.value !== undefined) {
-                var other = document.getElementById("qgendera2");
-                $(other).val(ta0.value)
-            }
-            if (ta2.value !== undefined) {
-                other = document.getElementById("q2a9");
-                $(other).val(ta2.value)
-            }
-        }
-    </script>
+
 </head>
 
 <body>
     <section class="content">
-        <p>Please answer the following questions before starting the experiment:</p><br>
+        <p>Please answer the following questions to conclude the experiment:</p><br>
         <form action="/experiment/init" method="post" id="current_form">
             <fieldset id="fieldset_english_level" class="container_radio_buttons">
                 <p>What is your level of English?</p>
@@ -164,8 +143,70 @@
                 <label><input type="radio" name="current_tiredness" id="q6a4" value="4" class="option-input radio">very
                     fit</label><br>
             </fieldset><br>
+
+            <fieldset id="questions" class="container_radio_buttons">
+                <p>If you have any comments on the experiment, please add them here:</p>
+                <label><textarea id="qfeedback1" name="question_feedback1"></textarea></label>
+            </fieldset>
+
+            <fieldset id="feedback" class="container_radio_buttons">
+                <p>All your data is anonymous! We will analyze it. May we also share it in a public research dataset?
+                </p>
+                <label><input type="radio" name="question_feedback41" id="qfeedback41" value="0"
+                        class="option-input radio" required="true">Yes</label><br>
+                <label><input type="radio" name="question_feedback41" id="qfeedback42" value="1"
+                        class="option-input radio" required="true">No</label><br>
+            </fieldset>
+
+            <fieldset id="results" class="container_radio_buttons">
+                <p>If you would like to receive the results of this study, please leave your email here. <br>
+                    <small>Results are used anonymously. Your email will never be shared with anyone, and you will not
+                        receive any
+                        other emails other than the results of this study. After we email the study results to you, we
+                        will delete
+                        your email.</small>
+                </p>
+                <label><textarea id="qfeedback2" name="question_feedback2" style="height: 50px"></textarea></label>
+            </fieldset>
+
+            <fieldset id="interviewed class=" container_radio_buttons">
+                <p>If you would like to be
+                    interviewed in the context of this study, please leave your email here. <br>
+                    <small>Results are used anonymously. Your email will never be shared with anyone, and you will not
+                        receive
+                        any other emails other than the results of this study. After we email the study results to you,
+                        we will
+                        delete
+                        your email.</small>
+                </p>
+                <label><textarea id="qfeedback3" name="question_feedback3" style="height: 50px"></textarea></label>
+            </fieldset>
+
             <button type="submit" id="submitter" class="button blue">Next</button>
         </form>
+
+        <script>
+            $(document).ready(function () {
+                var form = document.getElementById('current_form');
+                if (form.attachEvent) {
+                    form.attachEvent("submit", processForm);
+                } else {
+                    form.addEventListener("submit", processForm);
+                }
+            });
+            function processForm() {
+                var ta0 = document.getElementById("qgendertext");
+                var ta2 = document.getElementById("q2text");
+                if (ta0.value !== undefined) {
+                    var other = document.getElementById("qgendera2");
+                    $(other).val(ta0.value)
+                }
+                if (ta2.value !== undefined) {
+                    other = document.getElementById("q2a9");
+                    $(other).val(ta2.value)
+                }
+            }
+        </script>
 
     </section>
 </body>

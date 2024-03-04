@@ -15,16 +15,6 @@ class Section(BaseModel):
     character_count: int
 
 
-class User(BaseModel):
-    # uuid PK
-    id: str
-    creator: str
-    # FK to Section they will be creating Flashcards for
-    flashcard_section_id: str
-    # FK to Section they will be reviewing Flashcards for
-    review_section_id: str
-
-
 class CreateFlashcard(BaseModel):
     front: str
     back: str
@@ -65,30 +55,17 @@ class Review(BaseModel):
     relevance: int
 
 
-class PostExperientFormData(BaseModel):
-    question_gender: Optional[str] = Field(None, alias="gender")
-    question_1: int
-    question_dem6: int
-    # FK to User
-    user_id: str
+class User(BaseModel):
+    # uuid PK
+    id: str
+    creator: str
+    # FK to Section they will be creating Flashcards for
+    flashcard_section_id: str
+    # FK to Section they will be reviewing Flashcards for
+    review_section_id: str
 
 
-class PreExperimentFormData(BaseModel):
-    english_level: int = Field(..., alias="english_level")
-    education_level: int = Field(..., alias="education_level")
-    flashcard_experience: int = Field(..., alias="flashcard_experience")
-    flashcard_preference: Optional[int] = Field(None, alias="flashcard_preference")
-    flashcard_usage_frequency: int = Field(..., alias="flashcard_usage_frequency")
-    study_duration: int = Field(..., alias="study_duration")
-    current_tiredness: int = Field(..., alias="current_tiredness")
-    # FK to User
-    user_id: str
-
-    class Config:
-        populate_by_name = True
-
-
-class ParticipantForm(BaseModel):
+class Participant(BaseModel):
     donation_preference: int = Field(..., alias="donation_to")
     donation_other: Optional[str] = Field(None, alias="donation_to_other")
     data_policy_agreement: int = Field(..., alias="data_policy")
@@ -97,4 +74,25 @@ class ParticipantForm(BaseModel):
 
     class Config:
         use_enum_values = True
+        populate_by_name = True
+
+
+class Demographics(BaseModel):
+    question_gender: Optional[str] = Field(None, alias="gender")
+    # TODO: Change to feedback? Or something else?
+    question_1: int
+    question_dem6: int
+
+    english_level: int = Field(..., alias="english_level")
+    education_level: int = Field(..., alias="education_level")
+    flashcard_experience: int = Field(..., alias="flashcard_experience")
+    flashcard_preference: Optional[int] = Field(None, alias="flashcard_preference")
+    flashcard_usage_frequency: int = Field(..., alias="flashcard_usage_frequency")
+    study_duration: int = Field(..., alias="study_duration")
+    current_tiredness: int = Field(..., alias="current_tiredness")
+
+    # FK to User
+    user_id: str
+
+    class Config:
         populate_by_name = True

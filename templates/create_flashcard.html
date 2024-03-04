@@ -11,123 +11,127 @@
 </head>
 
 <body>
-    {% block title %}
-    <div class="create-flashcard-introduction">
-        <p>
-        <h1>{{ title }}</h1>
-        </p>
-        <p>You are now tasked with creating a FlashCard. The source Text for the your Flashcard is Highlighted on the
-            left, the input boxes for
-            the front and back of the card are on the right. </p>
-        <p>For the scientific validity of this experiment, please enter how you would be create the best study material
-            for your own future learning!
-        </p>
-    </div>
-    {% endblock %}
+    <section class="content">
+        {% block title %}
+        <div class="create-flashcard-introduction">
+            <p>
+            <h1>{{ title }}</h1>
+            </p>
+            <p>You are now tasked with creating a FlashCard. The source Text for the your Flashcard is Highlighted on
+                the
+                left, the input boxes for
+                the front and back of the card are on the right. </p>
+            <p>For the scientific validity of this experiment, please enter how you would be create the best study
+                material
+                for your own future learning!
+            </p>
+        </div>
+        {% endblock %}
 
 
-    <style>
-        .container {
-            display: flex;
-            height: 50vh;
-            /* Adjust based on your layout */
-        }
+        <style>
+            .container {
+                display: flex;
+                height: 50vh;
+                /* Adjust based on your layout */
+            }
 
-        .pdf-viewer {
-            flex: 2;
-            /* Adjust based on your preference */
-            height: 100%;
-        }
+            .pdf-viewer {
+                flex: 2;
+                /* Adjust based on your preference */
+                height: 100%;
+            }
 
-        .sidebar {
-            flex: 2;
-            /* Adjust based on your preference */
-            background-color: #f0f0f0;
-            /* Example background color */
-            padding: 20px;
-            overflow-y: auto;
-            /* Allows scrolling if the content is too long */
-        }
+            .sidebar {
+                flex: 2;
+                /* Adjust based on your preference */
+                background-color: #f0f0f0;
+                /* Example background color */
+                padding: 20px;
+                overflow-y: auto;
+                /* Allows scrolling if the content is too long */
+            }
 
-        .flashcard {
-            border: 1px solid #ccc;
-            /* Example border */
-            padding: 10px;
-            margin-top: 20px;
-        }
+            .flashcard {
+                border: 1px solid #ccc;
+                /* Example border */
+                padding: 10px;
+                margin-top: 20px;
+            }
 
-        .front,
-        .back {
-            margin-bottom: 10px;
-        }
-    </style>
-    <div id="flashcards-container">
-        {% block section %}
-        <div class="flashcard-container" id="flashcard-{{ section_heading }}">
-            <div class="cards">
-                <div class="container">
-                    <div class="pdf-viewer">
-                        <iframe src="/pdfs/{{ section.file_name }}" width="100%" height="600px" loading="lazy"
-                            title="PDF-file"></iframe>
-                    </div>
-                    <div class="sidebar">
-                        <h2>{{ section.section_heading }}</h2>
-                        <div class="flashcard">
-                            <div class="front">
-                                <h3>Front</h3>
-                                <textarea id="front"></textarea>
-                            </div>
-                            <div class="back">
-                                <h3>Back</h3>
-                                <textarea id="back"></textarea>
+            .front,
+            .back {
+                margin-bottom: 10px;
+            }
+        </style>
+        <div id="flashcards-container">
+            {% block section %}
+            <div class="flashcard-container" id="flashcard-{{ section_heading }}">
+                <div class="cards">
+                    <div class="container">
+                        <div class="pdf-viewer">
+                            <iframe src="/pdfs/{{ section.file_name }}" width="100%" height="600px" loading="lazy"
+                                title="PDF-file"></iframe>
+                        </div>
+                        <div class="sidebar">
+                            <h2>{{ section.section_heading }}</h2>
+                            <div class="flashcard">
+                                <div class="front">
+                                    <h3>Front</h3>
+                                    <textarea id="front"></textarea>
+                                </div>
+                                <div class="back">
+                                    <h3>Back</h3>
+                                    <textarea id="back"></textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            {% endblock %}
         </div>
-        {% endblock %}
-    </div>
-    <div class="questions">
-        <form action="/experiment" method="post" id="current_form">
-            <button type="button" onclick="submitFlashCard()" class="button blue">Submit FlashCard</button>
-        </form>
-    </div>
-    <script>
-        function submitFlashCard() {
-            const frontText = document.getElementById("front").value.trim();
-            const backText = document.getElementById("back").value.trim();
+        <div class="questions">
+            <form action="/experiment" method="post" id="current_form">
+                <button type="button" onclick="submitFlashCard()" class="button blue">Submit FlashCard</button>
+            </form>
+        </div>
+        <script>
+            function submitFlashCard() {
+                const frontText = document.getElementById("front").value.trim();
+                const backText = document.getElementById("back").value.trim();
 
-            // Check if both "front" and "back" text areas are filled out
-            if (frontText === "" || backText === "") {
-                alert("Please fill out both the front and back of the flashcard.");
-                return; // Stop the function if one of the fields is empty
+                // Check if both "front" and "back" text areas are filled out
+                if (frontText === "" || backText === "") {
+                    alert("Please fill out both the front and back of the flashcard.");
+                    return; // Stop the function if one of the fields is empty
+                }
+
+                // If both are filled, proceed to submit
+                var formData = new FormData();
+                formData.append("front", frontText);
+                formData.append("back", backText);
+
+                // Send the form data using fetch API
+                fetch('/flashcard', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.text();
+                    })
+                    .then(text => {
+                        console.log(text);
+                        // Redirect or handle success response
+                        window.location.href = '/experiment'; // Redirect on successful submission
+                    })
+                    .catch(error => console.error('Error:', error));
             }
-
-            // If both are filled, proceed to submit
-            var formData = new FormData();
-            formData.append("front", frontText);
-            formData.append("back", backText);
-
-            // Send the form data using fetch API
-            fetch('/flashcard', {
-                method: 'POST',
-                body: formData
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(text => {
-                    console.log(text);
-                    // Redirect or handle success response
-                    window.location.href = '/dem_questions'; // Redirect on successful submission
-                })
-                .catch(error => console.error('Error:', error));
-        }
-    </script>
+        </script>
+    </section>
 </body>
 
 </html>

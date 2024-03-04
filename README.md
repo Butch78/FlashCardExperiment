@@ -44,23 +44,6 @@ In your terminal, type:
 ```
 On your browser, you can now visit the page [http://127.0.0.1:5000/](http://127.0.0.1:5000/) to see the experiment landing page. 
 
-## EXTEND OR MODIFY
-If you need to extend or modify CRExperiment, no worries, we got you covered! 
-
-Here are some things you need to know before hacking:
-
-1. **resources/experiments**: the source code to be reviewed goes into this directory. In order to be correctly rendered by CRExperiment, the source code **must** follow these guidelines:
-	* you have to create a separate file for each group of the experiment. As an example, **resources/experiments** contains 2 files: `files_experiment1` and `files_experiment2`. Hence, 2 groups (one can be control group, the other one test group).
-	* Inside the file, you have to put the source code of the file(s) to be reviewed between 2 strings `~~~~`, representing the start and end of the source code. 
-	* The start string `~~~~`, have to be followed by the following information:
-
-
-		`~~~~{file_number}{L or R (L for left side, R for right side)}-{filename}`
-		
-		As an example, the string `~~~~0L-ImageSprite.java` means the starting of the source code of file number 0, left side, called ImageSprite.java; while the string `~~~~0R-ImageSprite.java` means the starting of the source code of file number 0, right side, called ImageSprite.java.
-		
-	* Every source code must have 2 versions, Left or Right, representing the file before and after the commit.
-	* You can put as many source codes of files as you want: they will all be presented in the same webpage. You just have to increase the file_number, otherwise in the logs you will not be able to trace in which file the participant put a comment.
 
 2. **templates**: In the **templates/** directory you can find _all_ the webpages of the experiment, such as _index.html_, _initial\_questions.html_, _conclusion.html_, etc. Hence, if you want to create a new webpage, you need to create an html file in this directory. After creating the file, you need to create an entry point in the `run.py` following Flask sintax, that is `@app.route("/{WEBPAGE_NAME}", methods=['GET', 'POST'])`. In order to populate the webpage with text (or questions), you have 2 possibilities:
 	
